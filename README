@@ -1,0 +1,37 @@
+NAME
+    Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line
+    arguments (@ARGV)
+
+VERSION
+    version 0.11
+
+SYNOPSIS
+     use Perinci::Sub::GetArgs::Argv;
+
+     my $res = get_args_from_argv(argv=>\@ARGV, meta=>$meta, ...);
+
+DESCRIPTION
+    This module provides "get_args_from_argv()", which parses command line
+    arguments (@ARGV) into subroutine arguments (%args). This module is used
+    by Perinci::CmdLine.
+
+    This module uses Log::Any for logging framework.
+
+    This module has Rinci metadata.
+
+FUNCTIONS
+    None are exported by default, but they are exportable.
+
+FAQ
+SEE ALSO
+    Perinci
+
+AUTHOR
+    Steven Haryanto <stevenharyanto@gmail.com>
+
+COPYRIGHT AND LICENSE
+    This software is copyright (c) 2012 by Steven Haryanto.
+
+    This is free software; you can redistribute it and/or modify it under
+    the same terms as the Perl 5 programming language system itself.
+
