@@ -20,8 +20,6 @@ my $meta = {
     },
 };
 
-# XXX check bool arg
-
 test_getargs(meta=>$meta, argv=>[qw/--arg1 1 --arg2 2/],
            args=>{arg1=>1, arg2=>2},
            name=>"optional missing = ok");
@@ -138,6 +136,36 @@ test_getargs(meta=>$meta, argv=>[qw/--foo-yaml ~/], per_arg_yaml=>1,
                  args=>{foo=>2},
                  name=>"argv defaults to \@ARGV");
 }
+
+# test bool, one-letter arg, cmdline_aliases
+
+my $meta = {
+    v => 1.1,
+    args => {
+        b => {schema=>'bool'},
+        b2 => {schema=>'bool'},
+        s => {schema=>'str'},
+        s2 => {schema=>'str',
+               cmdline_aliases=>{
+                   S=>{},
+                   S_foo=>{schema=>[bool=>{is=>1}],
+                           code=>sub{$_[0]{s2} = 'foo'}},
+               }
+           },
+    },
+};
+test_getargs(meta=>$meta, argv=>[qw/-b -s=blah/],
+             args=>{b=>1, s=>"blah"},
+             name=>"one-letter args get -X as well as --X");
+test_getargs(meta=>$meta, argv=>[qw/--nob2/],
+             args=>{b2=>0},
+             name=>"bool args with length > 1 get --XXX as well as --noXXX");
+test_getargs(meta=>$meta, argv=>[qw/-S blah/],
+             args=>{s2=>"blah"},
+             name=>"cmdline_aliases: S");
+test_getargs(meta=>$meta, argv=>[qw/--S_foo/], # XXX S-foo not yet provided?
+             args=>{s2=>"foo"},
+             name=>"cmdline_aliases: S_foo");
 
 DONE_TESTING:
 done_testing();
