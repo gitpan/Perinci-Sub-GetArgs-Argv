@@ -1,5 +1,10 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.13     2012-03-23
+
+         Support arguments with dot (e.g. 'with.dot') using --with-dot syntax.
+
+
 0.12     2012-02-28
 
          Parse arg's 'cmdline_aliases'.

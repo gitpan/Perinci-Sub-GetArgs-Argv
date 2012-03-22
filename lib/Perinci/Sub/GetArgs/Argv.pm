@@ -13,7 +13,7 @@ use Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(get_args_from_argv);
 
-our $VERSION = '0.12'; # VERSION
+our $VERSION = '0.13'; # VERSION
 
 our %SPEC;
 
@@ -182,7 +182,10 @@ sub get_args_from_argv {
                 return "$name=s";
             }
         };
+        my $name0;
         for my $name (@name) {
+            unless (defined $name0) { $name0 = $name }
+            $name =~ s/\./-/g;
             $go_opt = $name2go_opt->($name, $as->{schema});
             # why we use coderefs here? due to getopt::long's behavior. when
             # @ARGV=qw() and go_spec is ('foo=s' => \$opts{foo}) then %opts will
@@ -191,7 +194,7 @@ sub get_args_from_argv {
             # prefer, so we can later differentiate "unspecified"
             # (exists($opts{foo}) == false) and "specified as undef"
             # (exists($opts{foo}) == true but defined($opts{foo}) == false).
-            $go_spec{$go_opt} = sub { $args->{$name[0]} = $_[1] };
+            $go_spec{$go_opt} = sub { $args->{$name0} = $_[1] };
             if ($per_arg_yaml && $as->{schema}[0] ne 'bool') {
                 $go_spec{"$name-yaml=s"} = sub {
                     my $decoded;
@@ -200,7 +203,7 @@ sub get_args_from_argv {
                     return [500, "Invalid YAML in option --$name-yaml: ".
                                 "$_[1]: $eval_err"]
                         if $eval_err;
-                    $args->{$name[0]} = $decoded;
+                    $args->{$name0} = $decoded;
                 };
             }
 
@@ -212,7 +215,7 @@ sub get_args_from_argv {
                     if ($alspec->{code}) {
                         $go_spec{$go_opt} = sub { $alspec->{code}->($args) };
                     } else {
-                        $go_spec{$go_opt} = sub { $args->{$name[0]} = $_[1] };
+                        $go_spec{$go_opt} = sub { $args->{$name0} = $_[1] };
                     }
                 }
             }
@@ -320,7 +323,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-version 0.12
+version 0.13
 
 =head1 SYNOPSIS
 
@@ -338,15 +341,124 @@ This module uses L<Log::Any> for logging framework.
 
 This module has L<Rinci> metadata.
 
-=head1 FUNCTIONS
-
-None are exported by default, but they are exportable.
-
 =head1 FAQ
 
 =head1 SEE ALSO
 
 L<Perinci>
+
+=head1 FUNCTIONS
+
+
+=head2 get_args_from_argv(%args) -> [status, msg, result, meta]
+
+Get subroutine arguments (%args) from command-line arguments (@ARGV).
+
+Using information in function metadata's 'args' property, parse command line
+arguments '@argv' into hash '%args', suitable for passing into subs.
+
+Uses Getopt::Long's GetOptions to parse the result.
+
+As with GetOptions, this function modifies its 'argv' argument.
+
+Why would one use this function instead of using Getopt::Long directly? Among
+other reasons, we want YAML parsing (ability to pass data structures via command
+line) and parsing of pos and greedy.
+
+=over
+
+=item *
+
+How this routine uses the 'args' property
+
+
+=back
+
+Bool types can be specified using:
+
+    --ARGNAME
+
+or
+
+    --noARGNAME
+
+All the other types can be specified using:
+
+    --ARGNAME VALUE
+
+or
+
+    --ARGNAME=VALUE
+
+VALUE will be parsed as YAML for nonscalar types (hash, array). If you want to
+force YAML parsing for scalar types (e.g. when you want to specify undef, '~' in
+YAML) you can use:
+
+    --ARGNAME-yaml=VALUE
+
+but you need to set 'perB<arg>yaml' to true.
+
+This function also (using Perinci::Sub::GetArgs::Array) groks 'pos' and 'greedy'
+argument specification, for example:
+
+    $SPEC{multiply2} = {
+        v => 1.1,
+        summary => 'Multiply 2 numbers (a & b)',
+        args => {
+            a => ['num*' => {pos=>0}],
+            b => ['num*' => {pos=>1}],
+        }
+    }
+
+then on the command-line any of below is valid:
+
+    % multiply2 --a 2 --b 3
+    % multiply2 2 --b 3; # first non-option argument is fed into a (pos=0)
+    % multiply2 2 3;     # first argument is fed into a, second into b (pos=1)
+
+Arguments ('*' denotes required arguments):
+
+=over 4
+
+=item * B<argv>* => I<array>
+
+If not specified, defaults to @ARGV
+
+=item * B<extra_getopts> => I<hash>
+
+Specify extra Getopt::Long specification.
+
+If specified, add extra Getopt::Long specification (as long as it doesn't clash
+with spec arg). This is used, for example, by Perinci::CmdLine::run() to add
+general options --help, --version, --list, etc so it can mixed with spec arg
+options, for convenience.
+
+=item * B<meta>* => I<hash>
+
+=item * B<per_arg_yaml> => I<bool> (default: 0)
+
+Whether to recognize --ARGNAME-yaml.
+
+This is useful for example if you want to specify a value which is not
+expressible from the command-line, like 'undef'.
+
+    % script.pl --name-yaml '~'
+
+=item * B<strict> => I<bool> (default: 1)
+
+Strict mode.
+
+If set to 0, will still return parsed argv even if there are parsing errors. If
+set to 1 (the default), will die upon error.
+
+Normally you would want to use strict mode, for more error checking. Setting off
+strict is used by, for example, Perinci::BashComplete.
+
+=back
+
+Return value:
+
+Returns an enveloped result (an array). First element (status) is an integer containing HTTP status code (200 means OK, 4xx caller error, 5xx function error). Second element (msg) is a string containing error message, or 'OK' if status is 200. Third element (result) is optional, the actual result. Fourth element (meta) is called result metadata and is optional, a hash that contains extra information.
 
 =head1 AUTHOR
 

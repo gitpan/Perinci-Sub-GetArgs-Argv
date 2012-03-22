@@ -167,6 +167,18 @@ test_getargs(meta=>$meta, argv=>[qw/--S_foo/], # XXX S-foo not yet provided?
              args=>{s2=>"foo"},
              name=>"cmdline_aliases: S_foo");
 
+# test dot
+
+$meta = {
+    v => 1.1,
+    args => {
+        "foo.bar" => {schema=>'int'},
+    },
+};
+test_getargs(meta=>$meta, argv=>[qw/--foo-bar 2/],
+             args=>{'foo.bar' => 2},
+             name=>"with.dot accepted via --with-dot");
+
 DONE_TESTING:
 done_testing();
 
