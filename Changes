@@ -1,5 +1,14 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.14     2012-03-23
+
+         [INCOMPATIBLE CHANGES, REMOVED FEATURES]
+
+         - Argument with underscore (foo_bar) is only represented with --foo-bar
+           and no longer with --foo_bar, because having both disrupts
+           Getopt::Long's ability to autocomplete (e.g. --foo).
+
+
 0.13     2012-03-23
 
          Support arguments with dot (e.g. 'with.dot') using --with-dot syntax.

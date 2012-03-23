@@ -104,18 +104,18 @@ $meta = {
         foo_bar_baz => {schema=>'int'},
     },
 };
-test_getargs(name=>"dash alias for underscore (1)",
+test_getargs(name=>"underscore becomes dash (1)",
              meta=>$meta, argv=>[qw/--foo_bar_baz 2/],
-             args=>{foo_bar_baz=>2},
+             error=>1,
        );
-test_getargs(name=>"dash alias for underscore (2)",
-             meta=>$meta, argv=>[qw/--foo-bar-baz 2/],
-             args=>{foo_bar_baz=>2},
-       );
-test_getargs(name=>"dash alias for underscore (3)",
+test_getargs(name=>"underscore becomes dash (2)",
              meta=>$meta, argv=>[qw/--foo-bar_baz 2/],
              error=>1,
          );
+test_getargs(name=>"underscore becomes dash (3)",
+             meta=>$meta, argv=>[qw/--foo-bar-baz 2/],
+             args=>{foo_bar_baz=>2},
+       );
 
 $meta = {
     v => 1.1,

@@ -13,7 +13,7 @@ use Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(get_args_from_argv);
 
-our $VERSION = '0.13'; # VERSION
+our $VERSION = '0.14'; # VERSION
 
 our %SPEC;
 
@@ -165,8 +165,8 @@ sub get_args_from_argv {
     while (my ($a, $as) = each %$args_p) {
         $as->{schema} = Data::Sah::normalize_schema($as->{schema} // 'any');
         my $go_opt;
+        $a =~ s/_/-/g; # arg_with_underscore becomes --arg-with-underscore
         my @name = ($a);
-        push @name, $a if $a =~ s/_/-/g; # allow --foo_bar and --foo-bar
         my $name2go_opt = sub {
             my ($name, $schema) = @_;
             if ($schema->[0] eq 'bool') {
@@ -182,9 +182,9 @@ sub get_args_from_argv {
                 return "$name=s";
             }
         };
-        my $name0;
+        my $arg_key;
         for my $name (@name) {
-            unless (defined $name0) { $name0 = $name }
+            unless (defined $arg_key) { $arg_key = $name; $arg_key =~ s/-/_/g }
             $name =~ s/\./-/g;
             $go_opt = $name2go_opt->($name, $as->{schema});
             # why we use coderefs here? due to getopt::long's behavior. when
@@ -194,7 +194,7 @@ sub get_args_from_argv {
             # prefer, so we can later differentiate "unspecified"
             # (exists($opts{foo}) == false) and "specified as undef"
             # (exists($opts{foo}) == true but defined($opts{foo}) == false).
-            $go_spec{$go_opt} = sub { $args->{$name0} = $_[1] };
+            $go_spec{$go_opt} = sub { $args->{$arg_key} = $_[1] };
             if ($per_arg_yaml && $as->{schema}[0] ne 'bool') {
                 $go_spec{"$name-yaml=s"} = sub {
                     my $decoded;
@@ -203,7 +203,7 @@ sub get_args_from_argv {
                     return [500, "Invalid YAML in option --$name-yaml: ".
                                 "$_[1]: $eval_err"]
                         if $eval_err;
-                    $args->{$name0} = $decoded;
+                    $args->{$arg_key} = $decoded;
                 };
             }
 
@@ -215,7 +215,7 @@ sub get_args_from_argv {
                     if ($alspec->{code}) {
                         $go_spec{$go_opt} = sub { $alspec->{code}->($args) };
                     } else {
-                        $go_spec{$go_opt} = sub { $args->{$name0} = $_[1] };
+                        $go_spec{$go_opt} = sub { $args->{$arg_key} = $_[1] };
                     }
                 }
             }
@@ -323,7 +323,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-version 0.13
+version 0.14
 
 =head1 SYNOPSIS
 
