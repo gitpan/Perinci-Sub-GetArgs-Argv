@@ -13,7 +13,7 @@ use Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(get_args_from_argv);
 
-our $VERSION = '0.14'; # VERSION
+our $VERSION = '0.15'; # VERSION
 
 our %SPEC;
 
@@ -233,7 +233,7 @@ sub get_args_from_argv {
                             "argument from metadata, ignored", $k0, $k_);
             next;
         }
-        $go_spec{$k} = $v;
+        $go_spec{$k0} = $v;
     }
 
     # 2. then we run GetOptions to fill $args from command-line opts
@@ -323,7 +323,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-version 0.14
+version 0.15
 
 =head1 SYNOPSIS
 

@@ -1,5 +1,12 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.15     2012-03-29
+
+         [FIXES]
+
+         - extra_getopts --foo=s was cut and became --foo.
+
+
 0.14     2012-03-23
 
          [INCOMPATIBLE CHANGES, REMOVED FEATURES]

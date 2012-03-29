@@ -59,12 +59,15 @@ test_getargs(meta=>$meta, argv=>['--arg1', '{foo: false}',
            name=>"yaml syntax error");
 
 {
-    my $extra = 0;
-    test_getargs(meta=>$meta, argv=>[qw/--arg1 1 --arg2 2 --extra/],
-                 extra_getopts=>{extra=>sub{$extra=5}},
+    my $extra  = 0;
+    my $extra2 = 0;
+    test_getargs(meta=>$meta, argv=>[qw/--arg1 1 --arg2 2 --extra --extra2 6/],
+                 extra_getopts=>{extra=>sub{$extra=5},
+                                 "extra2=s"=>sub{$extra2=$_[1]}},
                  args=>{arg1=>1, arg2=>2},
                  posttest=>sub {
-                     is($extra, 5, "extra getopt is executed");
+                     is($extra , 5, "extra getopt is executed 1");
+                     is($extra2, 6, "extra getopt is executed 2");
                  },
                  name=>"opt: extra_getopts",
              );
