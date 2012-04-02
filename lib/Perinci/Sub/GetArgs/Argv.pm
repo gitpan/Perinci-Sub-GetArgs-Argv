@@ -13,7 +13,7 @@ use Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(get_args_from_argv);
 
-our $VERSION = '0.16'; # VERSION
+our $VERSION = '0.17'; # VERSION
 
 our %SPEC;
 
@@ -128,7 +128,7 @@ expressible from the command-line, like 'undef'.
 _
         },
         extra_getopts_before => {
-            schema => ['hash' => {}],
+            schema => ['array' => {}],
             summary => 'Specify extra Getopt::Long specification',
             description => <<'_',
 
@@ -145,7 +145,7 @@ specification won't have any effect.
 _
         },
         extra_getopts_after => {
-            schema => ['hash' => {}],
+            schema => ['array' => {}],
             summary => 'Specify extra Getopt::Long specification',
             description => <<'_',
 
@@ -172,15 +172,15 @@ sub get_args_from_argv {
         unless $v == 1.1;
     my $args_p     = clone($meta->{args} // {});
     my $strict     = $input_args{strict} // 1;
-    my $extra_go_b = $input_args{extra_getopts_before} // {};
-    my $extra_go_a = $input_args{extra_getopts_after} // {};
+    my $extra_go_b = $input_args{extra_getopts_before} // [];
+    my $extra_go_a = $input_args{extra_getopts_after} // [];
     my $per_arg_yaml = $input_args{per_arg_yaml} // 0;
     $log->tracef("-> get_args_from_argv(), argv=%s", $argv);
 
     # the resulting args
     my $args = {};
 
-    my %go_spec;
+    my @go_spec;
 
     # 1. first we form Getopt::Long spec
 
@@ -216,9 +216,9 @@ sub get_args_from_argv {
             # prefer, so we can later differentiate "unspecified"
             # (exists($opts{foo}) == false) and "specified as undef"
             # (exists($opts{foo}) == true but defined($opts{foo}) == false).
-            $go_spec{$go_opt} = sub { $args->{$arg_key} = $_[1] };
+            push @go_spec, $go_opt => sub { $args->{$arg_key} = $_[1] };
             if ($per_arg_yaml && $as->{schema}[0] ne 'bool') {
-                $go_spec{"$name-yaml=s"} = sub {
+                push @go_spec, "$name-yaml=s" => sub {
                     my $decoded;
                     eval { $decoded = YAML::Syck::Load($_[1]) };
                     my $eval_err = $@;
@@ -235,9 +235,9 @@ sub get_args_from_argv {
                     $go_opt = $name2go_opt->(
                         $al, $alspec->{schema} // $as->{schema});
                     if ($alspec->{code}) {
-                        $go_spec{$go_opt} = sub { $alspec->{code}->($args) };
+                        push @go_spec, $go_opt=>sub {$alspec->{code}->($args)};
                     } else {
-                        $go_spec{$go_opt} = sub { $args->{$arg_key} = $_[1] };
+                        push @go_spec, $go_opt=>sub {$args->{$arg_key} = $_[1]};
                     }
                 }
             }
@@ -246,7 +246,7 @@ sub get_args_from_argv {
 
     # 2. then we run GetOptions to fill $args from command-line opts
 
-    my @go_spec = (%$extra_go_b, %go_spec, %$extra_go_a);
+    @go_spec = (@$extra_go_b, @go_spec, @$extra_go_a);
     $log->tracef("GetOptions spec: %s", \@go_spec);
     my $old_go_opts = Getopt::Long::Configure(
         $strict ? "no_pass_through" : "pass_through",
@@ -331,7 +331,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-version 0.16
+version 0.17
 
 =head1 SYNOPSIS
 
@@ -440,7 +440,7 @@ If set to true, will check that required arguments (those with req=>1) have been
 specified. Normally you want this, but Perinci::CmdLine turns this off so users
 can run --help even when arguments are incomplete.
 
-=item * B<extra_getopts_after> => I<hash>
+=item * B<extra_getopts_after> => I<array>
 
 Specify extra Getopt::Long specification.
 
@@ -448,7 +448,7 @@ Just like B<extra_getopts_before>, but the extra specification is put B<after>
 function arguments specification so extra options can override function
 arguments.
 
-=item * B<extra_getopts_before> => I<hash>
+=item * B<extra_getopts_before> => I<array>
 
 Specify extra Getopt::Long specification.
 

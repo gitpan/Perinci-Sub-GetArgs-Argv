@@ -1,5 +1,13 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.17     2012-04-02
+
+         [INCOMPATIBLE CHANGE]
+
+         - Change 'extra_getopts_before' and 'extra_getopts_after' from hash to
+           array, because ordering matters in GetOptions().
+
+
 0.16     2012-04-02
 
          [INCOMPATIBLE CHANGE]

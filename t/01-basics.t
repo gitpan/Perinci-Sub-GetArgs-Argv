@@ -62,8 +62,8 @@ test_getargs(meta=>$meta, argv=>['--arg1', '{foo: false}',
     my $extra  = 0;
     my $extra2 = 0;
     test_getargs(meta=>$meta, argv=>[qw/--arg1 1 --arg2 2 --extra --extra2 6/],
-                 extra_getopts_before=>{extra=>sub{$extra=5},
-                                        "extra2=s"=>sub{$extra2=$_[1]}},
+                 extra_getopts_before=>[extra=>sub{$extra=5},
+                                        "extra2=s"=>sub{$extra2=$_[1]}],
                  args=>{arg1=>1, arg2=>2},
                  posttest=>sub {
                      is($extra , 5, "extra getopt is parsed 1");
@@ -73,8 +73,8 @@ test_getargs(meta=>$meta, argv=>['--arg1', '{foo: false}',
              );
     $extra = 0;
     test_getargs(meta=>$meta, argv=>[qw/--arg1 1 --arg2 2/],
-                 extra_getopts=>{"arg1=s"=>sub{$extra=1},
-                                 "--arg2=s"=>sub{$extra=2}},
+                 extra_getopts=>["arg1=s"=>sub{$extra=1},
+                                 "--arg2=s"=>sub{$extra=2}],
                  args=>{arg1=>1, arg2=>2},
                  posttest=>sub {
                      is($extra, 0, "clashing extra getopt is ignored");

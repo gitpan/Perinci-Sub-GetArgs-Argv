@@ -25,4 +25,4 @@ requires:
 resources:
   homepage: http://search.cpan.org/dist/Perinci-Sub-GetArgs-Argv/
   repository: http://github.com/sharyanto/perl-Perinsi-Sub-GetArgs-Argv
-version: 0.16
+version: 0.17

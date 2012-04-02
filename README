@@ -3,7 +3,7 @@ NAME
     arguments (@ARGV)
 
 VERSION
-    version 0.16
+    version 0.17
 
 SYNOPSIS
      use Perinci::Sub::GetArgs::Argv;
@@ -98,7 +98,7 @@ FUNCTIONS
         Perinci::CmdLine turns this off so users can run --help even when
         arguments are incomplete.
 
-    *   extra_getopts_after => *hash*
+    *   extra_getopts_after => *array*
 
         Specify extra Getopt::Long specification.
 
@@ -106,7 +106,7 @@ FUNCTIONS
         after function arguments specification so extra options can override
         function arguments.
 
-    *   extra_getopts_before => *hash*
+    *   extra_getopts_before => *array*
 
         Specify extra Getopt::Long specification.
 
