@@ -13,7 +13,7 @@ use Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(get_args_from_argv);
 
-our $VERSION = '0.15'; # VERSION
+our $VERSION = '0.16'; # VERSION
 
 our %SPEC;
 
@@ -26,7 +26,7 @@ $SPEC{get_args_from_argv} = {
 Using information in function metadata's 'args' property, parse command line
 arguments '@argv' into hash '%args', suitable for passing into subs.
 
-Uses Getopt::Long's GetOptions to parse the result.
+Currently uses Getopt::Long's GetOptions to do the parsing.
 
 As with GetOptions, this function modifies its 'argv' argument.
 
@@ -91,6 +91,17 @@ _
             schema => ['hash*' => {}],
             req => 1,
         },
+        check_required_args => {
+            schema => ['bool'=>{default=>1}],
+            summary => 'Whether to check required arguments',
+            description => <<'_',
+
+If set to true, will check that required arguments (those with req=>1) have been
+specified. Normally you want this, but Perinci::CmdLine turns this off so users
+can run --help even when arguments are incomplete.
+
+_
+        },
         strict => {
             schema => ['bool' => {default=>1}],
             summary => 'Strict mode',
@@ -116,24 +127,36 @@ expressible from the command-line, like 'undef'.
 
 _
         },
-        extra_getopts => {
+        extra_getopts_before => {
             schema => ['hash' => {}],
             summary => 'Specify extra Getopt::Long specification',
             description => <<'_',
 
-If specified, add extra Getopt::Long specification (as long as it doesn't clash
-with spec arg). This is used, for example, by Perinci::CmdLine::run() to add
-general options --help, --version, --list, etc so it can mixed with spec arg
-options, for convenience.
+If specified, insert extra Getopt::Long specification. This is used, for
+example, by Perinci::CmdLine::run() to add general options --help, --version,
+--list, etc so it can mixed with spec arg options, for convenience.
+
+Since the extra specification is put at the front (before function arguments
+specification), the extra options will not be able to override function
+arguments (this is how Getopt::Long works). For example, if extra specification
+contains --help, and one of function arguments happens to be 'help', the extra
+specification won't have any effect.
 
 _
-        }
+        },
+        extra_getopts_after => {
+            schema => ['hash' => {}],
+            summary => 'Specify extra Getopt::Long specification',
+            description => <<'_',
+
+Just like *extra_getopts_before*, but the extra specification is put _after_
+function arguments specification so extra options can override function
+arguments.
+
+_
+        },
     },
 };
-
-# this is an internal flag used by Perinci::CmdLine to bypass checking required
-# args
-our $_pa_skip_check_required_args;
 
 sub get_args_from_argv {
     # we are trying to shave off startup overhead, so only load modules when
@@ -149,7 +172,8 @@ sub get_args_from_argv {
         unless $v == 1.1;
     my $args_p     = clone($meta->{args} // {});
     my $strict     = $input_args{strict} // 1;
-    my $extra_go   = $input_args{extra_getopts} // {};
+    my $extra_go_b = $input_args{extra_getopts_before} // {};
+    my $extra_go_a = $input_args{extra_getopts_after} // {};
     my $per_arg_yaml = $input_args{per_arg_yaml} // 0;
     $log->tracef("-> get_args_from_argv(), argv=%s", $argv);
 
@@ -157,8 +181,6 @@ sub get_args_from_argv {
     my $args = {};
 
     my %go_spec;
-
-    $_pa_skip_check_required_args = 0;
 
     # 1. first we form Getopt::Long spec
 
@@ -222,27 +244,14 @@ sub get_args_from_argv {
         }
     }
 
-    # while we already handle arg/--arg and arg=s/arg! variation, we still
-    # haven't covered 'arg|alias' case
-    while (my ($k0, $v) = each %$extra_go) {
-        my $k  = $k0; $k  =~ s/(.+)(?:=.+|!)/$1/; $k =~ s/^-+//;
-        my $k_ = $k ; $k_ =~ s/-/_/g;
-        if ($args_p->{$k_} ||
-                grep {/^(?:--)?\Q$k\E(?:=|!|\z)/} keys %go_spec) {
-            $log->warnf("Extra getopt option %s (%s) clashes with ".
-                            "argument from metadata, ignored", $k0, $k_);
-            next;
-        }
-        $go_spec{$k0} = $v;
-    }
-
     # 2. then we run GetOptions to fill $args from command-line opts
 
-    $log->tracef("GetOptions spec: %s", \%go_spec);
+    my @go_spec = (%$extra_go_b, %go_spec, %$extra_go_a);
+    $log->tracef("GetOptions spec: %s", \@go_spec);
     my $old_go_opts = Getopt::Long::Configure(
         $strict ? "no_pass_through" : "pass_through",
         "no_ignore_case", "permute");
-    my $result = Getopt::Long::GetOptionsFromArray($argv, %go_spec);
+    my $result = Getopt::Long::GetOptionsFromArray($argv, @go_spec);
     Getopt::Long::Configure($old_go_opts);
     unless ($result) {
         return [500, "GetOptions failed"] if $strict;
@@ -271,7 +280,7 @@ sub get_args_from_argv {
 
     # 4. check required args & parse yaml/etc
 
-    unless ($_pa_skip_check_required_args) {
+    if ($input_args{check_required_args} // 1) {
         while (my ($a, $as) = each %$args_p) {
             if ($as->{req} &&
                     !exists($args->{$a})) {
@@ -301,7 +310,6 @@ sub get_args_from_argv {
                                 ref($args->{$a})."?"];
                 }
             }
-
             # XXX special parsing of type = date
         }
     }
@@ -323,7 +331,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-version 0.15
+version 0.16
 
 =head1 SYNOPSIS
 
@@ -357,7 +365,7 @@ Get subroutine arguments (%args) from command-line arguments (@ARGV).
 Using information in function metadata's 'args' property, parse command line
 arguments '@argv' into hash '%args', suitable for passing into subs.
 
-Uses Getopt::Long's GetOptions to parse the result.
+Currently uses Getopt::Long's GetOptions to do the parsing.
 
 As with GetOptions, this function modifies its 'argv' argument.
 
@@ -424,14 +432,35 @@ Arguments ('*' denotes required arguments):
 
 If not specified, defaults to @ARGV
 
-=item * B<extra_getopts> => I<hash>
+=item * B<check_required_args> => I<bool> (default: 1)
+
+Whether to check required arguments.
+
+If set to true, will check that required arguments (those with req=>1) have been
+specified. Normally you want this, but Perinci::CmdLine turns this off so users
+can run --help even when arguments are incomplete.
+
+=item * B<extra_getopts_after> => I<hash>
 
 Specify extra Getopt::Long specification.
 
-If specified, add extra Getopt::Long specification (as long as it doesn't clash
-with spec arg). This is used, for example, by Perinci::CmdLine::run() to add
-general options --help, --version, --list, etc so it can mixed with spec arg
-options, for convenience.
+Just like B<extra_getopts_before>, but the extra specification is put B<after>
+function arguments specification so extra options can override function
+arguments.
+
+=item * B<extra_getopts_before> => I<hash>
+
+Specify extra Getopt::Long specification.
+
+If specified, insert extra Getopt::Long specification. This is used, for
+example, by Perinci::CmdLine::run() to add general options --help, --version,
+--list, etc so it can mixed with spec arg options, for convenience.
+
+Since the extra specification is put at the front (before function arguments
+specification), the extra options will not be able to override function
+arguments (this is how Getopt::Long works). For example, if extra specification
+contains --help, and one of function arguments happens to be 'help', the extra
+specification won't have any effect.
 
 =item * B<meta>* => I<hash>
 

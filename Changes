@@ -1,5 +1,16 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.16     2012-04-02
+
+         [INCOMPATIBLE CHANGE]
+
+         - Change $_pa_skip_check_required_args internal flag with
+           'check_required_args' option.
+
+         - Replace extra_getopts with extra_getopts_before and
+           extra_getopts_after.
+
+
 0.15     2012-03-29
 
          [FIXES]

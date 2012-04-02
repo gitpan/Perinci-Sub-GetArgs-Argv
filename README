@@ -3,7 +3,7 @@ NAME
     arguments (@ARGV)
 
 VERSION
-    version 0.15
+    version 0.16
 
 SYNOPSIS
      use Perinci::Sub::GetArgs::Argv;
@@ -31,7 +31,7 @@ FUNCTIONS
     line arguments '@argv' into hash '%args', suitable for passing into
     subs.
 
-    Uses Getopt::Long's GetOptions to parse the result.
+    Currently uses Getopt::Long's GetOptions to do the parsing.
 
     As with GetOptions, this function modifies its 'argv' argument.
 
@@ -89,14 +89,38 @@ FUNCTIONS
 
         If not specified, defaults to @ARGV
 
-    *   extra_getopts => *hash*
+    *   check_required_args => *bool* (default: 1)
+
+        Whether to check required arguments.
+
+        If set to true, will check that required arguments (those with
+        req=>1) have been specified. Normally you want this, but
+        Perinci::CmdLine turns this off so users can run --help even when
+        arguments are incomplete.
+
+    *   extra_getopts_after => *hash*
 
         Specify extra Getopt::Long specification.
 
-        If specified, add extra Getopt::Long specification (as long as it
-        doesn't clash with spec arg). This is used, for example, by
-        Perinci::CmdLine::run() to add general options --help, --version,
-        --list, etc so it can mixed with spec arg options, for convenience.
+        Just like extra_getopts_before, but the extra specification is put
+        after function arguments specification so extra options can override
+        function arguments.
+
+    *   extra_getopts_before => *hash*
+
+        Specify extra Getopt::Long specification.
+
+        If specified, insert extra Getopt::Long specification. This is used,
+        for example, by Perinci::CmdLine::run() to add general options
+        --help, --version, --list, etc so it can mixed with spec arg
+        options, for convenience.
+
+        Since the extra specification is put at the front (before function
+        arguments specification), the extra options will not be able to
+        override function arguments (this is how Getopt::Long works). For
+        example, if extra specification contains --help, and one of function
+        arguments happens to be 'help', the extra specification won't have
+        any effect.
 
     *   meta* => *hash*
 

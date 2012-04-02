@@ -62,14 +62,14 @@ test_getargs(meta=>$meta, argv=>['--arg1', '{foo: false}',
     my $extra  = 0;
     my $extra2 = 0;
     test_getargs(meta=>$meta, argv=>[qw/--arg1 1 --arg2 2 --extra --extra2 6/],
-                 extra_getopts=>{extra=>sub{$extra=5},
-                                 "extra2=s"=>sub{$extra2=$_[1]}},
+                 extra_getopts_before=>{extra=>sub{$extra=5},
+                                        "extra2=s"=>sub{$extra2=$_[1]}},
                  args=>{arg1=>1, arg2=>2},
                  posttest=>sub {
-                     is($extra , 5, "extra getopt is executed 1");
-                     is($extra2, 6, "extra getopt is executed 2");
+                     is($extra , 5, "extra getopt is parsed 1");
+                     is($extra2, 6, "extra getopt is parsed 2");
                  },
-                 name=>"opt: extra_getopts",
+                 name=>"opt: extra_getopts_before",
              );
     $extra = 0;
     test_getargs(meta=>$meta, argv=>[qw/--arg1 1 --arg2 2/],
@@ -79,7 +79,7 @@ test_getargs(meta=>$meta, argv=>['--arg1', '{foo: false}',
                  posttest=>sub {
                      is($extra, 0, "clashing extra getopt is ignored");
                  },
-                 name=>"opt: extra_getopts (2)",
+                 name=>"opt: extra_getopts_before (clash)",
              );
 }
 
@@ -100,6 +100,24 @@ test_getargs(meta=>$meta,
              args=>{arg1=>1},
              name=>"opt: strict=0",
        );
+
+$meta = {
+    v=>1.1,
+    args=>{arg1=>{schema=>'str*', req=>1, pos=>0}},
+};
+
+test_getargs(meta=>$meta,
+             argv=>[qw//],
+             #check_required_args=>1, # the default
+             error=>1,
+             name=>"opt: check_required_args=1",
+         );
+test_getargs(meta=>$meta,
+             argv=>[qw//],
+             check_required_args=>0,
+             args=>{},
+             name=>"opt: check_required_args=0",
+         );
 
 $meta = {
     v => 1.1,
@@ -192,7 +210,8 @@ sub test_getargs {
         my $argv = clone($args{argv});
         my $res;
         my %input_args = (argv=>$argv, meta=>$args{meta});
-        for (qw/strict extra_getopts per_arg_yaml/) {
+        for (qw/strict check_required_args
+                extra_getopts_before extra_getopts_after per_arg_yaml/) {
             $input_args{$_} = $args{$_} if defined $args{$_};
         }
         $res = get_args_from_argv(%input_args);
