@@ -3,7 +3,7 @@ NAME
     arguments (@ARGV)
 
 VERSION
-    version 0.17
+    version 0.18
 
 SYNOPSIS
      use Perinci::Sub::GetArgs::Argv;
@@ -23,7 +23,12 @@ FAQ
 SEE ALSO
     Perinci
 
+DESCRIPTION
+    This module has Rinci metadata.
+
 FUNCTIONS
+    None are exported by default, but they are exportable.
+
   get_args_from_argv(%args) -> [status, msg, result, meta]
     Get subroutine arguments (%args) from command-line arguments (@ARGV).
 
@@ -63,7 +68,7 @@ FUNCTIONS
 
         --ARGNAME-yaml=VALUE
 
-    but you need to set 'perargyaml' to true.
+    but you need to set 'per*arg*yaml' to true.
 
     This function also (using Perinci::Sub::GetArgs::Array) groks 'pos' and
     'greedy' argument specification, for example:
@@ -102,9 +107,9 @@ FUNCTIONS
 
         Specify extra Getopt::Long specification.
 
-        Just like extra_getopts_before, but the extra specification is put
-        after function arguments specification so extra options can override
-        function arguments.
+        Just like *extra_getopts_before*, but the extra specification is put
+        *after* function arguments specification so extra options can
+        override function arguments.
 
     *   extra_getopts_before => *array*
 
@@ -124,6 +129,22 @@ FUNCTIONS
 
     *   meta* => *hash*
 
+    *   per_arg_json => *bool* (default: 0)
+
+        Whether to recognize --ARGNAME-json.
+
+        This is useful for example if you want to specify a value which is
+        not expressible from the command-line, like 'undef'.
+
+            % script.pl --name-json 'null'
+
+        But every other string will need to be quoted:
+
+            % script.pl --name-json '"foo"'
+
+        See also: per*arg*yaml. You should enable just one instead of
+        turning on both.
+
     *   per_arg_yaml => *bool* (default: 0)
 
         Whether to recognize --ARGNAME-yaml.
@@ -132,6 +153,9 @@ FUNCTIONS
         not expressible from the command-line, like 'undef'.
 
             % script.pl --name-yaml '~'
+
+        See also: per*arg*json. You should enable just one instead of
+        turning on both.
 
     *   strict => *bool* (default: 1)
 

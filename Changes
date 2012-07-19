@@ -1,5 +1,12 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.18     2012-07-19 (SHARYANTO)
+
+         - Add 'per_arg_json' option.
+
+         - Also try JSON parsing as well as YAML on non-scalar arguments.
+
+
 0.17     2012-04-02
 
          [INCOMPATIBLE CHANGE]

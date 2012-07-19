@@ -1,0 +1,54 @@
+{
+   "abstract" : "Get subroutine arguments from command line arguments (@ARGV)",
+   "author" : [
+      "Steven Haryanto <stevenharyanto@gmail.com>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Dist::Zilla version 4.300006, CPAN::Meta::Converter version 2.113640",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Perinci-Sub-GetArgs-Argv",
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "Module::Build" : "0.3601"
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "Module::Build" : "0.3601"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Data::Sah" : "0.02",
+            "JSON" : 0,
+            "Log::Any" : 0,
+            "Perinci::Sub::GetArgs::Array" : "0.09",
+            "Rinci" : "v1.1.10",
+            "YAML::Syck" : 0,
+            "perl" : "5.010000"
+         }
+      },
+      "test" : {
+         "requires" : {
+            "Data::Clone" : 0,
+            "Test::More" : "0.96"
+         }
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "homepage" : "http://search.cpan.org/dist/Perinci-Sub-GetArgs-Argv/",
+      "repository" : {
+         "url" : "http://github.com/sharyanto/perl-Perinsi-Sub-GetArgs-Argv"
+      }
+   },
+   "version" : "0.18"
+}
+

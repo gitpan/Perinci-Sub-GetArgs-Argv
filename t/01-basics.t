@@ -47,16 +47,21 @@ test_getargs(meta=>$meta, argv=>[qw//], error=>1,
 test_getargs(meta=>$meta, argv=>[qw/--foo bar/], error=>1,
            name=>"unknown args given = fails");
 
+test_getargs(meta=>$meta, argv=>['--arg1', '{"foo":0}',
+                               '--arg2', '',
+                               '--arg5', '{"foo":0}'],
+           args=>{arg1=>'{"foo":0}', arg2=>'', arg5=>{foo=>0}},
+           name=>"json parsing, done on nonscalars");
 test_getargs(meta=>$meta, argv=>['--arg1', '{foo: false}',
                                '--arg2', '',
                                '--arg5', '{foo: false}'],
            args=>{arg1=>'{foo: false}', arg2=>'', arg5=>{foo=>""}},
            name=>"yaml parsing, done on nonscalars");
-test_getargs(meta=>$meta, argv=>['--arg1', '{foo: false}',
+test_getargs(meta=>$meta, argv=>['--arg1', '{"foo": false}',
                                '--arg2', '',
                                '--arg5', '{foo: false'],
            error=>1,
-           name=>"yaml syntax error");
+           name=>"yaml+json syntax error");
 
 {
     my $extra  = 0;
@@ -150,6 +155,12 @@ test_getargs(meta=>$meta, argv=>[qw/--foo-yaml ~/],
 test_getargs(meta=>$meta, argv=>[qw/--foo-yaml ~/], per_arg_yaml=>1,
              args=>{foo=>undef},
              name=>"per_arg_yaml=1");
+test_getargs(meta=>$meta, argv=>[qw/--foo-json null/],
+             error=>1,
+             name=>"per_arg_json=0");
+test_getargs(meta=>$meta, argv=>[qw/--foo-json null/], per_arg_json=>1,
+             args=>{foo=>undef},
+             name=>"per_arg_json=1");
 
 {
     local @ARGV = (qw/--foo 2/);
@@ -211,7 +222,8 @@ sub test_getargs {
         my $res;
         my %input_args = (argv=>$argv, meta=>$args{meta});
         for (qw/strict check_required_args
-                extra_getopts_before extra_getopts_after per_arg_yaml/) {
+                extra_getopts_before extra_getopts_after
+                per_arg_json per_arg_yaml/) {
             $input_args{$_} = $args{$_} if defined $args{$_};
         }
         $res = get_args_from_argv(%input_args);

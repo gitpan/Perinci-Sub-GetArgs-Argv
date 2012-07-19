@@ -7,7 +7,9 @@ use Module::Build 0.3601;
 
 my %module_build_args = (
   "build_requires" => {
-    "Module::Build" => "0.3601"
+    "Data::Clone" => 0,
+    "Module::Build" => "0.3601",
+    "Test::More" => "0.96"
   },
   "configure_requires" => {
     "Module::Build" => "0.3601"
@@ -17,18 +19,17 @@ my %module_build_args = (
     "Steven Haryanto <stevenharyanto\@gmail.com>"
   ],
   "dist_name" => "Perinci-Sub-GetArgs-Argv",
-  "dist_version" => "0.17",
+  "dist_version" => "0.18",
   "license" => "perl",
   "module_name" => "Perinci::Sub::GetArgs::Argv",
   "recommends" => {},
   "recursive_test_files" => 1,
   "requires" => {
-    "Data::Clone" => 0,
     "Data::Sah" => "0.02",
+    "JSON" => 0,
     "Log::Any" => 0,
     "Perinci::Sub::GetArgs::Array" => "0.09",
     "Rinci" => "1.1.10",
-    "Test::More" => "0.96",
     "YAML::Syck" => 0,
     "perl" => "5.010000"
   },
