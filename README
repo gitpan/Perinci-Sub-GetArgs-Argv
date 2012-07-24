@@ -3,7 +3,7 @@ NAME
     arguments (@ARGV)
 
 VERSION
-    version 0.18
+    version 0.19
 
 SYNOPSIS
      use Perinci::Sub::GetArgs::Argv;
@@ -23,12 +23,7 @@ FAQ
 SEE ALSO
     Perinci
 
-DESCRIPTION
-    This module has Rinci metadata.
-
 FUNCTIONS
-    None are exported by default, but they are exportable.
-
   get_args_from_argv(%args) -> [status, msg, result, meta]
     Get subroutine arguments (%args) from command-line arguments (@ARGV).
 
@@ -68,7 +63,7 @@ FUNCTIONS
 
         --ARGNAME-yaml=VALUE
 
-    but you need to set 'per*arg*yaml' to true.
+    but you need to set 'perargyaml' to true.
 
     This function also (using Perinci::Sub::GetArgs::Array) groks 'pos' and
     'greedy' argument specification, for example:
@@ -90,6 +85,17 @@ FUNCTIONS
 
     Arguments ('*' denotes required arguments):
 
+    *   allow_extra_elems => *bool* (default: 0)
+
+        Allow extra/unassigned elements in argv.
+
+        If set to 1, then if there are array elements unassigned to one of
+        the arguments, instead of generating an error, the function will
+        just ignore them.
+
+        This option will be passed to Perinci::Sub::GetArgs::Array's
+        allowextraelems.
+
     *   argv* => *array*
 
         If not specified, defaults to @ARGV
@@ -107,9 +113,9 @@ FUNCTIONS
 
         Specify extra Getopt::Long specification.
 
-        Just like *extra_getopts_before*, but the extra specification is put
-        *after* function arguments specification so extra options can
-        override function arguments.
+        Just like extra_getopts_before, but the extra specification is put
+        after function arguments specification so extra options can override
+        function arguments.
 
     *   extra_getopts_before => *array*
 
@@ -129,6 +135,20 @@ FUNCTIONS
 
     *   meta* => *hash*
 
+    *   on_missing_required_args => *code*
+
+        Execute code when there is missing required args.
+
+        This can be used to give a chance to supply argument value from
+        other sources if not specified by command-line options.
+        Perinci::CmdLine, for example, uses this hook to supply value from
+        STDIN or file contents (if argument has "cmdline_src" specification
+        key set).
+
+        This hook will be called for each missing argument. It will be
+        supplied hash arguments: (arg => $themissingargumentname, args =
+        $the>resultingargssofar, spec = $the>arg_spec).
+
     *   per_arg_json => *bool* (default: 0)
 
         Whether to recognize --ARGNAME-json.
@@ -142,8 +162,8 @@ FUNCTIONS
 
             % script.pl --name-json '"foo"'
 
-        See also: per*arg*yaml. You should enable just one instead of
-        turning on both.
+        See also: perargyaml. You should enable just one instead of turning
+        on both.
 
     *   per_arg_yaml => *bool* (default: 0)
 
@@ -154,8 +174,8 @@ FUNCTIONS
 
             % script.pl --name-yaml '~'
 
-        See also: per*arg*json. You should enable just one instead of
-        turning on both.
+        See also: perargjson. You should enable just one instead of turning
+        on both.
 
     *   strict => *bool* (default: 1)
 

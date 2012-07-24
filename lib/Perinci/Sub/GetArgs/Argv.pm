@@ -13,7 +13,7 @@ use Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(get_args_from_argv);
 
-our $VERSION = '0.18'; # VERSION
+our $VERSION = '0.19'; # VERSION
 
 our %SPEC;
 
@@ -175,6 +175,34 @@ arguments.
 
 _
         },
+        allow_extra_elems => {
+            schema => ['bool' => {default=>0}],
+            summary => 'Allow extra/unassigned elements in argv',
+            description => <<'_',
+
+If set to 1, then if there are array elements unassigned to one of the
+arguments, instead of generating an error, the function will just ignore them.
+
+This option will be passed to Perinci::Sub::GetArgs::Array's allow_extra_elems.
+
+_
+        },
+        on_missing_required_args => {
+            schema => 'code',
+            summary => 'Execute code when there is missing required args',
+            description => <<'_',
+
+This can be used to give a chance to supply argument value from other sources if
+not specified by command-line options. Perinci::CmdLine, for example, uses this
+hook to supply value from STDIN or file contents (if argument has `cmdline_src`
+specification key set).
+
+This hook will be called for each missing argument. It will be supplied hash
+arguments: (arg => $the_missing_argument_name, args =>
+$the_resulting_args_so_far, spec => $the_arg_spec).
+
+_
+        },
     },
 };
 
@@ -195,6 +223,8 @@ sub get_args_from_argv {
     my $extra_go_a = $input_args{extra_getopts_after} // [];
     my $per_arg_yaml = $input_args{per_arg_yaml} // 0;
     my $per_arg_json = $input_args{per_arg_json} // 0;
+    my $allow_extra_elems = $input_args{allow_extra_elems} // 0;
+    my $on_missing = $input_args{on_missing_required_args};
     $log->tracef("-> get_args_from_argv(), argv=%s", $argv);
 
     # the resulting args
@@ -296,6 +326,7 @@ sub get_args_from_argv {
     if (@$argv) {
         my $res = get_args_from_array(
             array=>$argv, _args_p=>$args_p,
+            allow_extra_elems => $allow_extra_elems,
         );
         if ($res->[0] != 200 && $strict) {
             return [500, "Get args from array failed: $res->[0] - $res->[1]"];
@@ -315,9 +346,14 @@ sub get_args_from_argv {
 
     if ($input_args{check_required_args} // 1) {
         while (my ($a, $as) = each %$args_p) {
-            if ($as->{req} &&
-                    !exists($args->{$a})) {
-                return [400, "Missing required argument: $a"] if $strict;
+            if (!exists($args->{$a})) {
+                # give a chance to hook to set missing arg
+                if ($on_missing) {
+                    $on_missing->(arg=>$a, args=>$args, spec=>$as);
+                }
+                if ($as->{req} && !exists($args->{$a})) {
+                    return [400, "Missing required argument: $a"] if $strict;
+                }
             }
             my $parse_json_or_yaml;
             my $type = $as->{schema}[0];
@@ -378,7 +414,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-version 0.18
+version 0.19
 
 =head1 SYNOPSIS
 
@@ -402,15 +438,8 @@ This module has L<Rinci> metadata.
 
 L<Perinci>
 
-=head1 DESCRIPTION
-
-
-This module has L<Rinci> metadata.
-
 =head1 FUNCTIONS
 
-
-None are exported by default, but they are exportable.
 
 =head2 get_args_from_argv(%args) -> [status, msg, result, meta]
 
@@ -458,7 +487,7 @@ YAML) you can use:
 
     --ARGNAME-yaml=VALUE
 
-but you need to set 'perI<arg>yaml' to true.
+but you need to set 'perB<arg>yaml' to true.
 
 This function also (using Perinci::Sub::GetArgs::Array) groks 'pos' and 'greedy'
 argument specification, for example:
@@ -482,6 +511,15 @@ Arguments ('*' denotes required arguments):
 
 =over 4
 
+=item * B<allow_extra_elems> => I<bool> (default: 0)
+
+Allow extra/unassigned elements in argv.
+
+If set to 1, then if there are array elements unassigned to one of the
+arguments, instead of generating an error, the function will just ignore them.
+
+This option will be passed to Perinci::Sub::GetArgs::Array's allowB<extra>elems.
+
 =item * B<argv>* => I<array>
 
 If not specified, defaults to @ARGV
@@ -498,7 +536,7 @@ can run --help even when arguments are incomplete.
 
 Specify extra Getopt::Long specification.
 
-Just like I<extra_getopts_before>, but the extra specification is put I<after>
+Just like B<extra_getopts_before>, but the extra specification is put B<after>
 function arguments specification so extra options can override function
 arguments.
 
@@ -518,6 +556,19 @@ specification won't have any effect.
 
 =item * B<meta>* => I<hash>
 
+=item * B<on_missing_required_args> => I<code>
+
+Execute code when there is missing required args.
+
+This can be used to give a chance to supply argument value from other sources if
+not specified by command-line options. Perinci::CmdLine, for example, uses this
+hook to supply value from STDIN or file contents (if argument has C<cmdline_src>
+specification key set).
+
+This hook will be called for each missing argument. It will be supplied hash
+arguments: (arg => $theB<missing>argumentB<name, args =>
+$the>resultingB<args>soB<far, spec => $the>arg_spec).
+
 =item * B<per_arg_json> => I<bool> (default: 0)
 
 Whether to recognize --ARGNAME-json.
@@ -531,7 +582,7 @@ But every other string will need to be quoted:
 
     % script.pl --name-json '"foo"'
 
-See also: perI<arg>yaml. You should enable just one instead of turning on both.
+See also: perB<arg>yaml. You should enable just one instead of turning on both.
 
 =item * B<per_arg_yaml> => I<bool> (default: 0)
 
@@ -542,7 +593,7 @@ expressible from the command-line, like 'undef'.
 
     % script.pl --name-yaml '~'
 
-See also: perI<arg>json. You should enable just one instead of turning on both.
+See also: perB<arg>json. You should enable just one instead of turning on both.
 
 =item * B<strict> => I<bool> (default: 1)
 
