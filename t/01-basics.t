@@ -199,6 +199,28 @@ test_getargs(meta=>$meta, argv=>[qw/--S_foo/], # XXX S-foo not yet provided?
              args=>{s2=>"foo"},
              name=>"cmdline_aliases: S_foo");
 
+# test array of scalar, --foo 1 --foo 2
+
+$meta = {
+    v => 1.1,
+    args => {
+        ai => {schema=>[array => {of=>'int'}]},
+        as => {schema=>[array => {of=>'str*'}]},
+    },
+};
+test_getargs(meta=>$meta, argv=>[qw/--ai 1/],
+             args=>{ai=>[1]},
+             name=>"array of strings (int, 1)");
+test_getargs(meta=>$meta, argv=>[qw/--ai 1 --ai 1/],
+             args=>{ai=>[1, 1]},
+             name=>"array of strings (int, 2)");
+test_getargs(meta=>$meta, argv=>[qw/--as x/],
+             args=>{as=>['x']},
+             name=>"array of strings (str, 1)");
+test_getargs(meta=>$meta, argv=>['--as', '[x]', '--as', '', '--as', '"y"'],
+             args=>{as=>['[x]', '', '"y"']},
+             name=>"array of strings (str, 2)");
+
 # test dot
 
 $meta = {

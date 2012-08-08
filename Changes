@@ -1,5 +1,14 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.20     2012-08-08 (SHARYANTO)
+
+         - Change behavior of parsing arguments with type of array-of-scalar,
+           now uses --foo 1 --foo 2 a la Getopt::Long.
+
+         - Remove user documentation, this module will be "internal" and used
+           from Perinci::CmdLine.
+
+
 0.19     2012-07-23 (SHARYANTO)
 
          These changes are made to support `cmdline_src` arg spec key (Rinci

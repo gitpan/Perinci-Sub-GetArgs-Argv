@@ -13,7 +13,7 @@ use Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(get_args_from_argv);
 
-our $VERSION = '0.19'; # VERSION
+our $VERSION = '0.20'; # VERSION
 
 our %SPEC;
 
@@ -31,52 +31,11 @@ Currently uses Getopt::Long's GetOptions to do the parsing.
 As with GetOptions, this function modifies its 'argv' argument.
 
 Why would one use this function instead of using Getopt::Long directly? Among
-other reasons, we want YAML parsing (ability to pass data structures via command
-line) and parsing of pos and greedy.
+other reasons, we want to be able to parse complex types.
 
-* How this routine uses the 'args' property
-
-Bool types can be specified using:
-
-    --ARGNAME
-
-or
-
-    --noARGNAME
-
-All the other types can be specified using:
-
-    --ARGNAME VALUE
-
-or
-
-    --ARGNAME=VALUE
-
-VALUE will be parsed as YAML for nonscalar types (hash, array). If you want to
-force YAML parsing for scalar types (e.g. when you want to specify undef, '~' in
-YAML) you can use:
-
-    --ARGNAME-yaml=VALUE
-
-but you need to set 'per_arg_yaml' to true.
-
-This function also (using Perinci::Sub::GetArgs::Array) groks 'pos' and 'greedy'
-argument specification, for example:
-
-    $SPEC{multiply2} = {
-        v => 1.1,
-        summary => 'Multiply 2 numbers (a & b)',
-        args => {
-            a => ['num*' => {pos=>0}],
-            b => ['num*' => {pos=>1}],
-        }
-    }
-
-then on the command-line any of below is valid:
-
-    % multiply2 --a 2 --b 3
-    % multiply2 2 --b 3; # first non-option argument is fed into a (pos=0)
-    % multiply2 2 3;     # first argument is fed into a, second into b (pos=1)
+This function exists mostly to support command-line options parsing for
+Perinci::CmdLine. See its documentation, on the section of command-line
+options/argument parsing.
 
 _
     args => {
@@ -206,6 +165,8 @@ _
     },
 };
 
+my $re_simple_scalar = qr/^(str|num|int|float|bool)$/;
+
 sub get_args_from_argv {
     # we are trying to shave off startup overhead, so only load modules when
     # about to be used
@@ -236,6 +197,11 @@ sub get_args_from_argv {
 
     while (my ($a, $as) = each %$args_p) {
         $as->{schema} = Data::Sah::normalize_schema($as->{schema} // 'any');
+        # XXX normalization of 'of' clause should've been handled by sah itself
+        if ($as->{schema}[0] eq 'array' && $as->{schema}[1]{of}) {
+            $as->{schema}[1]{of} = Data::Sah::normalize_schema(
+                $as->{schema}[1]{of});
+        }
         my $go_opt;
         $a =~ s/_/-/g; # arg_with_underscore becomes --arg-with-underscore
         my @name = ($a);
@@ -259,6 +225,11 @@ sub get_args_from_argv {
             unless (defined $arg_key) { $arg_key = $name; $arg_key =~ s/-/_/g }
             $name =~ s/\./-/g;
             $go_opt = $name2go_opt->($name, $as->{schema});
+            my $type = $as->{schema}[0];
+            my $cs   = $as->{schema}[1];
+            my $is_simple_scalar = $type =~ $re_simple_scalar;
+            my $is_array_of_simple_scalar = $type eq 'array' &&
+                $cs->{of} && $cs->{of}[0] =~ $re_simple_scalar;
             # why we use coderefs here? due to getopt::long's behavior. when
             # @ARGV=qw() and go_spec is ('foo=s' => \$opts{foo}) then %opts will
             # become (foo=>undef). but if go_spec is ('foo=s' => sub {
@@ -266,16 +237,35 @@ sub get_args_from_argv {
             # prefer, so we can later differentiate "unspecified"
             # (exists($opts{foo}) == false) and "specified as undef"
             # (exists($opts{foo}) == true but defined($opts{foo}) == false).
-            push @go_spec, $go_opt => sub { $args->{$arg_key} = $_[1] };
+            push @go_spec, $go_opt => sub {
+                if ($is_array_of_simple_scalar) {
+                    $args->{$arg_key} //= [];
+                    push @{ $args->{$arg_key} }, $_[1];
+                } elsif ($is_simple_scalar) {
+                    $args->{$arg_key} = $_[1];
+                } else {
+                    require JSON;
+                    require YAML::Syck; local $YAML::Syck::ImplicitTyping = 1;
+                    state $json = JSON->new->allow_nonref;
+                    eval { $args->{$arg_key} = $json->decode($_[1]) };
+                    my $ej = $@;
+                    eval { $args->{$arg_key} = YAML::Syck::Load($_[1]) };
+                    my $ey = $@;
+                    die "Invalid YAML/JSON in arg '$arg_key'" if $ej && $ey;
+                }
+                # XXX special parsing of type = date
+            };
+
             if ($per_arg_json && $as->{schema}[0] ne 'bool') {
                 push @go_spec, "$name-json=s" => sub {
                     require JSON;
                     my $decoded;
                     eval { $decoded = JSON->new->allow_nonref->decode($_[1]) };
-                    my $eval_err = $@;
-                    return [500, "Invalid JSON in option --$name-json: ".
-                                "$_[1]: $eval_err"]
-                        if $eval_err;
+                    my $e = $@;
+                    if ($e) {
+                        die "Invalid JSON in option --$name-json: $_[1]: $e";
+                        return;
+                    }
                     $args->{$arg_key} = $decoded;
                 };
             }
@@ -284,10 +274,11 @@ sub get_args_from_argv {
                     require YAML::Syck; local $YAML::Syck::ImplicitTyping = 1;
                     my $decoded;
                     eval { $decoded = YAML::Syck::Load($_[1]) };
-                    my $eval_err = $@;
-                    return [500, "Invalid YAML in option --$name-yaml: ".
-                                "$_[1]: $eval_err"]
-                        if $eval_err;
+                    my $e = $@;
+                    if ($e) {
+                        die "Invalid YAML in option --$name-yaml: $_[1]: $e";
+                        return;
+                    }
                     $args->{$arg_key} = $decoded;
                 };
             }
@@ -342,7 +333,7 @@ sub get_args_from_argv {
         }
     }
 
-    # 4. check required args & parse json/yaml/etc
+    # 4. check required args
 
     if ($input_args{check_required_args} // 1) {
         while (my ($a, $as) = each %$args_p) {
@@ -355,45 +346,6 @@ sub get_args_from_argv {
                     return [400, "Missing required argument: $a"] if $strict;
                 }
             }
-            my $parse_json_or_yaml;
-            my $type = $as->{schema}[0];
-            # XXX more proper checking, e.g. check any/all recursively for
-            # nonscalar types. check base type.
-            $log->tracef("name=%s, arg=%s, parse_json_or_yaml=%s",
-                         $a, $args->{$a}, $parse_json_or_yaml);
-            $parse_json_or_yaml++ unless $type =~ /^(str|num|int|float|bool)$/;
-            if ($parse_json_or_yaml && defined($args->{$a})) {
-                require JSON;
-                require YAML::Syck; local $YAML::Syck::ImplicitTyping = 1;
-                if (ref($args->{$a}) eq 'ARRAY') {
-                    # XXX check whether each element needs to be YAML/JSON / not
-                    eval {
-                        $args->{$a} = [
-                            map { JSON->new->allow_nonref->decode($_) }
-                                @{$args->{$a}}
-                        ];
-                    };
-                    my $ej = $@;
-                    eval {
-                        $args->{$a} = [
-                            map { YAML::Syck::Load($_) } @{$args->{$a}}
-                        ];
-                    } if $ej;
-                    my $ey = $@;
-                    return [500, "Invalid YAML/JSON in arg '$a'"] if $ej && $ey;
-                } elsif (!ref($args->{$a})) {
-                    eval { $args->{$a} = JSON->new->allow_nonref->decode(
-                        $args->{$a}) };
-                    my $ej = $@;
-                    eval { $args->{$a} = YAML::Syck::Load($args->{$a}) } if $ej;
-                    my $ey = $@;
-                    return [500, "Invalid YAML/JSON in arg '$a'"] if $ej && $ey;
-                } else {
-                    return [500, "BUG: Why is \$args->{$a} ".
-                                ref($args->{$a})."?"];
-                }
-            }
-            # XXX special parsing of type = date
         }
     }
 
@@ -414,7 +366,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-version 0.19
+version 0.20
 
 =head1 SYNOPSIS
 
@@ -438,8 +390,15 @@ This module has L<Rinci> metadata.
 
 L<Perinci>
 
+=head1 DESCRIPTION
+
+
+This module has L<Rinci> metadata.
+
 =head1 FUNCTIONS
 
+
+None are exported by default, but they are exportable.
 
 =head2 get_args_from_argv(%args) -> [status, msg, result, meta]
 
@@ -453,59 +412,11 @@ Currently uses Getopt::Long's GetOptions to do the parsing.
 As with GetOptions, this function modifies its 'argv' argument.
 
 Why would one use this function instead of using Getopt::Long directly? Among
-other reasons, we want YAML parsing (ability to pass data structures via command
-line) and parsing of pos and greedy.
+other reasons, we want to be able to parse complex types.
 
-=over
-
-=item *
-
-How this routine uses the 'args' property
-
-
-=back
-
-Bool types can be specified using:
-
-    --ARGNAME
-
-or
-
-    --noARGNAME
-
-All the other types can be specified using:
-
-    --ARGNAME VALUE
-
-or
-
-    --ARGNAME=VALUE
-
-VALUE will be parsed as YAML for nonscalar types (hash, array). If you want to
-force YAML parsing for scalar types (e.g. when you want to specify undef, '~' in
-YAML) you can use:
-
-    --ARGNAME-yaml=VALUE
-
-but you need to set 'perB<arg>yaml' to true.
-
-This function also (using Perinci::Sub::GetArgs::Array) groks 'pos' and 'greedy'
-argument specification, for example:
-
-    $SPEC{multiply2} = {
-        v => 1.1,
-        summary => 'Multiply 2 numbers (a & b)',
-        args => {
-            a => ['num*' => {pos=>0}],
-            b => ['num*' => {pos=>1}],
-        }
-    }
-
-then on the command-line any of below is valid:
-
-    % multiply2 --a 2 --b 3
-    % multiply2 2 --b 3; # first non-option argument is fed into a (pos=0)
-    % multiply2 2 3;     # first argument is fed into a, second into b (pos=1)
+This function exists mostly to support command-line options parsing for
+Perinci::CmdLine. See its documentation, on the section of command-line
+options/argument parsing.
 
 Arguments ('*' denotes required arguments):
 
@@ -518,7 +429,7 @@ Allow extra/unassigned elements in argv.
 If set to 1, then if there are array elements unassigned to one of the
 arguments, instead of generating an error, the function will just ignore them.
 
-This option will be passed to Perinci::Sub::GetArgs::Array's allowB<extra>elems.
+This option will be passed to Perinci::Sub::GetArgs::Array's allowI<extra>elems.
 
 =item * B<argv>* => I<array>
 
@@ -536,7 +447,7 @@ can run --help even when arguments are incomplete.
 
 Specify extra Getopt::Long specification.
 
-Just like B<extra_getopts_before>, but the extra specification is put B<after>
+Just like I<extra_getopts_before>, but the extra specification is put I<after>
 function arguments specification so extra options can override function
 arguments.
 
@@ -566,8 +477,8 @@ hook to supply value from STDIN or file contents (if argument has C<cmdline_src>
 specification key set).
 
 This hook will be called for each missing argument. It will be supplied hash
-arguments: (arg => $theB<missing>argumentB<name, args =>
-$the>resultingB<args>soB<far, spec => $the>arg_spec).
+arguments: (arg => $theI<missing>argumentI<name, args =>
+$the>resultingI<args>soI<far, spec => $the>arg_spec).
 
 =item * B<per_arg_json> => I<bool> (default: 0)
 
@@ -582,7 +493,7 @@ But every other string will need to be quoted:
 
     % script.pl --name-json '"foo"'
 
-See also: perB<arg>yaml. You should enable just one instead of turning on both.
+See also: perI<arg>yaml. You should enable just one instead of turning on both.
 
 =item * B<per_arg_yaml> => I<bool> (default: 0)
 
@@ -593,7 +504,7 @@ expressible from the command-line, like 'undef'.
 
     % script.pl --name-yaml '~'
 
-See also: perB<arg>json. You should enable just one instead of turning on both.
+See also: perI<arg>json. You should enable just one instead of turning on both.
 
 =item * B<strict> => I<bool> (default: 1)
 

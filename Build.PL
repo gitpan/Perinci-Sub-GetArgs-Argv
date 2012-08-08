@@ -19,7 +19,7 @@ my %module_build_args = (
     "Steven Haryanto <stevenharyanto\@gmail.com>"
   ],
   "dist_name" => "Perinci-Sub-GetArgs-Argv",
-  "dist_version" => "0.19",
+  "dist_version" => "0.20",
   "license" => "perl",
   "module_name" => "Perinci::Sub::GetArgs::Argv",
   "recommends" => {},
@@ -29,7 +29,7 @@ my %module_build_args = (
     "JSON" => 0,
     "Log::Any" => 0,
     "Perinci::Sub::GetArgs::Array" => "0.09",
-    "Rinci" => "1.1.10",
+    "Rinci" => "v1.1.10",
     "YAML::Syck" => 0,
     "perl" => "5.010000"
   },

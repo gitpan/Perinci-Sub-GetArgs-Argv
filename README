@@ -3,7 +3,7 @@ NAME
     arguments (@ARGV)
 
 VERSION
-    version 0.19
+    version 0.20
 
 SYNOPSIS
      use Perinci::Sub::GetArgs::Argv;
@@ -23,7 +23,12 @@ FAQ
 SEE ALSO
     Perinci
 
+DESCRIPTION
+    This module has Rinci metadata.
+
 FUNCTIONS
+    None are exported by default, but they are exportable.
+
   get_args_from_argv(%args) -> [status, msg, result, meta]
     Get subroutine arguments (%args) from command-line arguments (@ARGV).
 
@@ -36,52 +41,11 @@ FUNCTIONS
     As with GetOptions, this function modifies its 'argv' argument.
 
     Why would one use this function instead of using Getopt::Long directly?
-    Among other reasons, we want YAML parsing (ability to pass data
-    structures via command line) and parsing of pos and greedy.
+    Among other reasons, we want to be able to parse complex types.
 
-    *   How this routine uses the 'args' property
-
-    Bool types can be specified using:
-
-        --ARGNAME
-
-    or
-
-        --noARGNAME
-
-    All the other types can be specified using:
-
-        --ARGNAME VALUE
-
-    or
-
-        --ARGNAME=VALUE
-
-    VALUE will be parsed as YAML for nonscalar types (hash, array). If you
-    want to force YAML parsing for scalar types (e.g. when you want to
-    specify undef, '~' in YAML) you can use:
-
-        --ARGNAME-yaml=VALUE
-
-    but you need to set 'perargyaml' to true.
-
-    This function also (using Perinci::Sub::GetArgs::Array) groks 'pos' and
-    'greedy' argument specification, for example:
-
-        $SPEC{multiply2} = {
-            v => 1.1,
-            summary => 'Multiply 2 numbers (a & b)',
-            args => {
-                a => ['num*' => {pos=>0}],
-                b => ['num*' => {pos=>1}],
-            }
-        }
-
-    then on the command-line any of below is valid:
-
-        % multiply2 --a 2 --b 3
-        % multiply2 2 --b 3; # first non-option argument is fed into a (pos=0)
-        % multiply2 2 3;     # first argument is fed into a, second into b (pos=1)
+    This function exists mostly to support command-line options parsing for
+    Perinci::CmdLine. See its documentation, on the section of command-line
+    options/argument parsing.
 
     Arguments ('*' denotes required arguments):
 
@@ -94,7 +58,7 @@ FUNCTIONS
         just ignore them.
 
         This option will be passed to Perinci::Sub::GetArgs::Array's
-        allowextraelems.
+        allow*extra*elems.
 
     *   argv* => *array*
 
@@ -113,9 +77,9 @@ FUNCTIONS
 
         Specify extra Getopt::Long specification.
 
-        Just like extra_getopts_before, but the extra specification is put
-        after function arguments specification so extra options can override
-        function arguments.
+        Just like *extra_getopts_before*, but the extra specification is put
+        *after* function arguments specification so extra options can
+        override function arguments.
 
     *   extra_getopts_before => *array*
 
@@ -146,8 +110,8 @@ FUNCTIONS
         key set).
 
         This hook will be called for each missing argument. It will be
-        supplied hash arguments: (arg => $themissingargumentname, args =
-        $the>resultingargssofar, spec = $the>arg_spec).
+        supplied hash arguments: (arg => $the*missing*argument*name, args =*
+        $the>resulting*args*so*far, spec =* $the>arg_spec).
 
     *   per_arg_json => *bool* (default: 0)
 
@@ -162,8 +126,8 @@ FUNCTIONS
 
             % script.pl --name-json '"foo"'
 
-        See also: perargyaml. You should enable just one instead of turning
-        on both.
+        See also: per*arg*yaml. You should enable just one instead of
+        turning on both.
 
     *   per_arg_yaml => *bool* (default: 0)
 
@@ -174,8 +138,8 @@ FUNCTIONS
 
             % script.pl --name-yaml '~'
 
-        See also: perargjson. You should enable just one instead of turning
-        on both.
+        See also: per*arg*json. You should enable just one instead of
+        turning on both.
 
     *   strict => *bool* (default: 1)
 
