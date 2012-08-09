@@ -1,9 +1,28 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.21     2012-08-09 (SHARYANTO)
+
+         [INCOMPATIBLE CHANGES]
+
+         - Enable Getopt::Long's configuration 'bundling' to get more
+           traditional behavior (e.g. -Ifoo instead of having to use -I foo).
+           This means you no longer can specify -I=foo since it means -I =foo
+           now.
+
+         [FIXES]
+
+         - Fix handling of cmdline_aliases (didn't use the same option handler
+           routine).
+
+
 0.20     2012-08-08 (SHARYANTO)
+
+         [INCOMPATIBLE CHANGES]
 
          - Change behavior of parsing arguments with type of array-of-scalar,
            now uses --foo 1 --foo 2 a la Getopt::Long.
+
+         [ETC]
 
          - Remove user documentation, this module will be "internal" and used
            from Perinci::CmdLine.

@@ -13,7 +13,7 @@ use Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(get_args_from_argv);
 
-our $VERSION = '0.20'; # VERSION
+our $VERSION = '0.21'; # VERSION
 
 our %SPEC;
 
@@ -230,6 +230,9 @@ sub get_args_from_argv {
             my $is_simple_scalar = $type =~ $re_simple_scalar;
             my $is_array_of_simple_scalar = $type eq 'array' &&
                 $cs->{of} && $cs->{of}[0] =~ $re_simple_scalar;
+            #$log->errorf("TMP:$name ss=%s ass=%s",
+            #             $is_simple_scalar, $is_array_of_simple_scalar);
+
             # why we use coderefs here? due to getopt::long's behavior. when
             # @ARGV=qw() and go_spec is ('foo=s' => \$opts{foo}) then %opts will
             # become (foo=>undef). but if go_spec is ('foo=s' => sub {
@@ -237,7 +240,8 @@ sub get_args_from_argv {
             # prefer, so we can later differentiate "unspecified"
             # (exists($opts{foo}) == false) and "specified as undef"
             # (exists($opts{foo}) == true but defined($opts{foo}) == false).
-            push @go_spec, $go_opt => sub {
+
+            my $go_handler = sub {
                 if ($is_array_of_simple_scalar) {
                     $args->{$arg_key} //= [];
                     push @{ $args->{$arg_key} }, $_[1];
@@ -255,6 +259,7 @@ sub get_args_from_argv {
                 }
                 # XXX special parsing of type = date
             };
+            push @go_spec, $go_opt => $go_handler;
 
             if ($per_arg_json && $as->{schema}[0] ne 'bool') {
                 push @go_spec, "$name-json=s" => sub {
@@ -291,7 +296,7 @@ sub get_args_from_argv {
                     if ($alspec->{code}) {
                         push @go_spec, $go_opt=>sub {$alspec->{code}->($args)};
                     } else {
-                        push @go_spec, $go_opt=>sub {$args->{$arg_key} = $_[1]};
+                        push @go_spec, $go_opt=>$go_handler;
                     }
                 }
             }
@@ -304,7 +309,7 @@ sub get_args_from_argv {
     $log->tracef("GetOptions spec: %s", \@go_spec);
     my $old_go_opts = Getopt::Long::Configure(
         $strict ? "no_pass_through" : "pass_through",
-        "no_ignore_case", "permute");
+        "no_ignore_case", "permute", "bundling");
     my $result = Getopt::Long::GetOptionsFromArray($argv, @go_spec);
     Getopt::Long::Configure($old_go_opts);
     unless ($result) {
@@ -366,7 +371,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-version 0.20
+version 0.21
 
 =head1 SYNOPSIS
 
