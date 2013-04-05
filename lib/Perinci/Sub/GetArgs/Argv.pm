@@ -1,6 +1,6 @@
 package Perinci::Sub::GetArgs::Argv;
 
-use 5.010;
+use 5.010001;
 use strict;
 use warnings;
 use Log::Any '$log';
@@ -8,12 +8,13 @@ use Log::Any '$log';
 use Data::Clone;
 use Data::Sah;
 use Perinci::Sub::GetArgs::Array qw(get_args_from_array);
+use Perinci::Sub::Util qw(wrapres);
 
 use Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(get_args_from_argv);
 
-our $VERSION = '0.21'; # VERSION
+our $VERSION = '0.22'; # VERSION
 
 our %SPEC;
 
@@ -309,7 +310,7 @@ sub get_args_from_argv {
     $log->tracef("GetOptions spec: %s", \@go_spec);
     my $old_go_opts = Getopt::Long::Configure(
         $strict ? "no_pass_through" : "pass_through",
-        "no_ignore_case", "permute", "bundling");
+        "no_ignore_case", "permute", "bundling", "no_getopt_compat");
     my $result = Getopt::Long::GetOptionsFromArray($argv, @go_spec);
     Getopt::Long::Configure($old_go_opts);
     unless ($result) {
@@ -325,7 +326,7 @@ sub get_args_from_argv {
             allow_extra_elems => $allow_extra_elems,
         );
         if ($res->[0] != 200 && $strict) {
-            return [500, "Get args from array failed: $res->[0] - $res->[1]"];
+            return wrapres([500, "Get args from array failed: "], $res);
         } elsif ($res->[0] == 200) {
             my $pos_args = $res->[2];
             for my $name (keys %$pos_args) {
@@ -371,7 +372,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-version 0.21
+version 0.22
 
 =head1 SYNOPSIS
 
@@ -389,16 +390,25 @@ This module uses L<Log::Any> for logging framework.
 
 This module has L<Rinci> metadata.
 
+
+This module has L<Rinci> metadata.
+
 =head1 FAQ
 
 =head1 SEE ALSO
 
 L<Perinci>
 
-=head1 DESCRIPTION
+=head1 AUTHOR
 
+Steven Haryanto <stevenharyanto@gmail.com>
 
-This module has L<Rinci> metadata.
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2013 by Steven Haryanto.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =head1 FUNCTIONS
 
@@ -526,17 +536,6 @@ strict is used by, for example, Perinci::BashComplete.
 Return value:
 
 Returns an enveloped result (an array). First element (status) is an integer containing HTTP status code (200 means OK, 4xx caller error, 5xx function error). Second element (msg) is a string containing error message, or 'OK' if status is 200. Third element (result) is optional, the actual result. Fourth element (meta) is called result metadata and is optional, a hash that contains extra information.
-
-=head1 AUTHOR
-
-Steven Haryanto <stevenharyanto@gmail.com>
-
-=head1 COPYRIGHT AND LICENSE
-
-This software is copyright (c) 2012 by Steven Haryanto.
-
-This is free software; you can redistribute it and/or modify it under
-the same terms as the Perl 5 programming language system itself.
 
 =cut
 

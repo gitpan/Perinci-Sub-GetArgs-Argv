@@ -4,7 +4,7 @@ use 5.010;
 use strict;
 use warnings;
 use Log::Any '$log';
-use Test::More 0.96;
+use Test::More 0.98;
 
 use Data::Clone qw(clone);
 use Perinci::Sub::GetArgs::Argv qw(get_args_from_argv);

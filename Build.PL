@@ -9,7 +9,7 @@ my %module_build_args = (
   "build_requires" => {
     "Data::Clone" => 0,
     "Module::Build" => "0.3601",
-    "Test::More" => "0.96"
+    "Test::More" => "0.98"
   },
   "configure_requires" => {
     "Module::Build" => "0.3601"
@@ -19,7 +19,7 @@ my %module_build_args = (
     "Steven Haryanto <stevenharyanto\@gmail.com>"
   ],
   "dist_name" => "Perinci-Sub-GetArgs-Argv",
-  "dist_version" => "0.21",
+  "dist_version" => "0.22",
   "license" => "perl",
   "module_name" => "Perinci::Sub::GetArgs::Argv",
   "recommends" => {},
@@ -29,9 +29,10 @@ my %module_build_args = (
     "JSON" => 0,
     "Log::Any" => 0,
     "Perinci::Sub::GetArgs::Array" => "0.09",
+    "Perinci::Sub::Util" => 0,
     "Rinci" => "v1.1.10",
     "YAML::Syck" => 0,
-    "perl" => "5.010000"
+    "perl" => "5.010001"
   },
   "script_files" => []
 );

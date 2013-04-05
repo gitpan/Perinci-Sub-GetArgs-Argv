@@ -3,7 +3,7 @@ NAME
     arguments (@ARGV)
 
 VERSION
-    version 0.21
+    version 0.22
 
 SYNOPSIS
      use Perinci::Sub::GetArgs::Argv;
@@ -19,12 +19,20 @@ DESCRIPTION
 
     This module has Rinci metadata.
 
+    This module has Rinci metadata.
+
 FAQ
 SEE ALSO
     Perinci
 
-DESCRIPTION
-    This module has Rinci metadata.
+AUTHOR
+    Steven Haryanto <stevenharyanto@gmail.com>
+
+COPYRIGHT AND LICENSE
+    This software is copyright (c) 2013 by Steven Haryanto.
+
+    This is free software; you can redistribute it and/or modify it under
+    the same terms as the Perl 5 programming language system itself.
 
 FUNCTIONS
     None are exported by default, but they are exportable.
@@ -159,13 +167,4 @@ FUNCTIONS
     message, or 'OK' if status is 200. Third element (result) is optional,
     the actual result. Fourth element (meta) is called result metadata and
     is optional, a hash that contains extra information.
-
-AUTHOR
-    Steven Haryanto <stevenharyanto@gmail.com>
-
-COPYRIGHT AND LICENSE
-    This software is copyright (c) 2012 by Steven Haryanto.
-
-    This is free software; you can redistribute it and/or modify it under
-    the same terms as the Perl 5 programming language system itself.
 

@@ -4,7 +4,7 @@
       "Steven Haryanto <stevenharyanto@gmail.com>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 4.300006, CPAN::Meta::Converter version 2.113640",
+   "generated_by" : "Dist::Zilla version 4.300028, CPAN::Meta::Converter version 2.120921",
    "license" : [
       "perl_5"
    ],
@@ -24,21 +24,30 @@
             "Module::Build" : "0.3601"
          }
       },
+      "develop" : {
+         "requires" : {
+            "Pod::Coverage::TrustPod" : "0",
+            "Test::Pod" : "1.41",
+            "Test::Pod::Coverage" : "1.08",
+            "Test::Rinci" : "0.01"
+         }
+      },
       "runtime" : {
          "requires" : {
             "Data::Sah" : "0.02",
-            "JSON" : 0,
-            "Log::Any" : 0,
+            "JSON" : "0",
+            "Log::Any" : "0",
             "Perinci::Sub::GetArgs::Array" : "0.09",
+            "Perinci::Sub::Util" : "0",
             "Rinci" : "v1.1.10",
-            "YAML::Syck" : 0,
-            "perl" : "5.010000"
+            "YAML::Syck" : "0",
+            "perl" : "5.010001"
          }
       },
       "test" : {
          "requires" : {
-            "Data::Clone" : 0,
-            "Test::More" : "0.96"
+            "Data::Clone" : "0",
+            "Test::More" : "0.98"
          }
       }
    },
@@ -46,9 +55,9 @@
    "resources" : {
       "homepage" : "http://search.cpan.org/dist/Perinci-Sub-GetArgs-Argv/",
       "repository" : {
-         "url" : "http://github.com/sharyanto/perl-Perinsi-Sub-GetArgs-Argv"
+         "url" : "http://github.com/sharyanto/perl-Perinci-Sub-GetArgs-Argv"
       }
    },
-   "version" : "0.21"
+   "version" : "0.22"
 }
 
