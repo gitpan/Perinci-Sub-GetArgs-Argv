@@ -14,9 +14,36 @@ use Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(get_args_from_argv);
 
-our $VERSION = '0.22'; # VERSION
+our $VERSION = '0.23'; # VERSION
 
 our %SPEC;
+
+my $re_simple_scalar = qr/^(str|num|int|float|bool)$/;
+
+# retun ($success?, $errmsg, $res)
+sub _parse_json {
+    require JSON;
+
+    my $str = shift;
+
+    state $json = JSON->new->allow_nonref;
+    my $res;
+    eval { $res = $json->decode($str) };
+    my $e = $@;
+    return (!$e, $e, $res);
+}
+
+sub _parse_yaml {
+    require YAML::Syck;
+
+    my $str = shift;
+
+    local $YAML::Syck::ImplicitTyping = 1;
+    my $res;
+    eval { $res = YAML::Syck::Load($str) };
+    my $e = $@;
+    return (!$e, $e, $res);
+}
 
 $SPEC{get_args_from_argv} = {
     v => 1.1,
@@ -44,7 +71,6 @@ _
             schema => ['array*' => {
                 of => 'str*',
             }],
-            req => 1,
             description => 'If not specified, defaults to @ARGV',
         },
         meta => {
@@ -165,9 +191,6 @@ _
         },
     },
 };
-
-my $re_simple_scalar = qr/^(str|num|int|float|bool)$/;
-
 sub get_args_from_argv {
     # we are trying to shave off startup overhead, so only load modules when
     # about to be used
@@ -249,14 +272,20 @@ sub get_args_from_argv {
                 } elsif ($is_simple_scalar) {
                     $args->{$arg_key} = $_[1];
                 } else {
-                    require JSON;
-                    require YAML::Syck; local $YAML::Syck::ImplicitTyping = 1;
-                    state $json = JSON->new->allow_nonref;
-                    eval { $args->{$arg_key} = $json->decode($_[1]) };
-                    my $ej = $@;
-                    eval { $args->{$arg_key} = YAML::Syck::Load($_[1]) };
-                    my $ey = $@;
-                    die "Invalid YAML/JSON in arg '$arg_key'" if $ej && $ey;
+                    {
+                        my ($success, $e, $decoded);
+                        ($success, $e, $decoded) = _parse_json($_[1]);
+                        if ($success) {
+                            $args->{$arg_key} = $decoded;
+                            last;
+                        }
+                        ($success, $e, $decoded) = _parse_yaml($_[1]);
+                        if ($success) {
+                            $args->{$arg_key} = $decoded;
+                            last;
+                        }
+                        die "Invalid YAML/JSON in arg '$arg_key'";
+                    }
                 }
                 # XXX special parsing of type = date
             };
@@ -264,28 +293,24 @@ sub get_args_from_argv {
 
             if ($per_arg_json && $as->{schema}[0] ne 'bool') {
                 push @go_spec, "$name-json=s" => sub {
-                    require JSON;
-                    my $decoded;
-                    eval { $decoded = JSON->new->allow_nonref->decode($_[1]) };
-                    my $e = $@;
-                    if ($e) {
+                    my ($success, $e, $decoded);
+                    ($success, $e, $decoded) = _parse_json($_[1]);
+                    if ($success) {
+                        $args->{$arg_key} = $decoded;
+                    } else {
                         die "Invalid JSON in option --$name-json: $_[1]: $e";
-                        return;
                     }
-                    $args->{$arg_key} = $decoded;
                 };
             }
             if ($per_arg_yaml && $as->{schema}[0] ne 'bool') {
                 push @go_spec, "$name-yaml=s" => sub {
-                    require YAML::Syck; local $YAML::Syck::ImplicitTyping = 1;
-                    my $decoded;
-                    eval { $decoded = YAML::Syck::Load($_[1]) };
-                    my $e = $@;
-                    if ($e) {
+                    my ($success, $e, $decoded);
+                    ($success, $e, $decoded) = _parse_yaml($_[1]);
+                    if ($success) {
+                        $args->{$arg_key} = $decoded;
+                    } else {
                         die "Invalid YAML in option --$name-yaml: $_[1]: $e";
-                        return;
                     }
-                    $args->{$arg_key} = $decoded;
                 };
             }
 
@@ -330,11 +355,57 @@ sub get_args_from_argv {
         } elsif ($res->[0] == 200) {
             my $pos_args = $res->[2];
             for my $name (keys %$pos_args) {
+                my $as  = $args_p->{$name};
+                my $val = $pos_args->{$name};
                 if (exists $args->{$name}) {
                     return [400, "You specified option --$name but also ".
-                                "argument #".$args_p->{$name}{pos}] if $strict;
+                                "argument #".$as->{pos}] if $strict;
                 }
-                $args->{$name} = $pos_args->{$name};
+                my $type = $as->{schema}[0];
+                my $cs   = $as->{schema}[1];
+                my $is_simple_scalar = $type =~ $re_simple_scalar;
+                my $is_array_of_simple_scalar = $type eq 'array' &&
+                    $cs->{of} && $cs->{of}[0] =~ $re_simple_scalar;
+
+                if ($as->{greedy} && ref($val) eq 'ARRAY') {
+                    # try parsing each element as JSON/YAML
+                    my $i = 0;
+                    for (@$val) {
+                        {
+                            my ($success, $e, $decoded);
+                            ($success, $e, $decoded) = _parse_json($_);
+                            if ($success) {
+                                $_ = $decoded;
+                                last;
+                            }
+                            ($success, $e, $decoded) = _parse_yaml($_);
+                            if ($success) {
+                                $_ = $decoded;
+                                last;
+                            }
+                            die "Invalid JSON/YAML in #$as->{pos}\[$i]";
+                        }
+                        $i++;
+                    }
+                }
+                if (!$as->{greedy} && !$is_simple_scalar) {
+                    # try parsing as JSON/YAML
+                    my ($success, $e, $decoded);
+                    ($success, $e, $decoded) = _parse_json($val);
+                    {
+                        if ($success) {
+                            $val = $decoded;
+                            last;
+                        }
+                        ($success, $e, $decoded) = _parse_yaml($val);
+                        if ($success) {
+                            $val = $decoded;
+                            last;
+                        }
+                        die "Invalid JSON/YAML in #$as->{pos}";
+                    }
+                }
+                $args->{$name} = $val;
             }
         }
     }
@@ -363,8 +434,11 @@ sub get_args_from_argv {
 1;
 #ABSTRACT: Get subroutine arguments from command line arguments (@ARGV)
 
+__END__
 
 =pod
+
+=encoding utf-8
 
 =head1 NAME
 
@@ -372,7 +446,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-version 0.22
+version 0.23
 
 =head1 SYNOPSIS
 
@@ -384,12 +458,10 @@ version 0.22
 
 This module provides C<get_args_from_argv()>, which parses command line
 arguments (C<@ARGV>) into subroutine arguments (C<%args>). This module is used
-by L<Perinci::CmdLine>.
+by L<Perinci::CmdLine>. For explanation on how command-line options are
+processed, see Perinci::CmdLine's documentation.
 
 This module uses L<Log::Any> for logging framework.
-
-This module has L<Rinci> metadata.
-
 
 This module has L<Rinci> metadata.
 
@@ -416,8 +488,6 @@ the same terms as the Perl 5 programming language system itself.
 None are exported by default, but they are exportable.
 
 =head2 get_args_from_argv(%args) -> [status, msg, result, meta]
-
-Get subroutine arguments (%args) from command-line arguments (@ARGV).
 
 Using information in function metadata's 'args' property, parse command line
 arguments '@argv' into hash '%args', suitable for passing into subs.
@@ -446,7 +516,7 @@ arguments, instead of generating an error, the function will just ignore them.
 
 This option will be passed to Perinci::Sub::GetArgs::Array's allowI<extra>elems.
 
-=item * B<argv>* => I<array>
+=item * B<argv> => I<array>
 
 If not specified, defaults to @ARGV
 
@@ -538,7 +608,3 @@ Return value:
 Returns an enveloped result (an array). First element (status) is an integer containing HTTP status code (200 means OK, 4xx caller error, 5xx function error). Second element (msg) is a string containing error message, or 'OK' if status is 200. Third element (result) is optional, the actual result. Fourth element (meta) is called result metadata and is optional, a hash that contains extra information.
 
 =cut
-
-
-__END__
-

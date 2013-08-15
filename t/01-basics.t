@@ -64,6 +64,28 @@ test_getargs(meta=>$meta, argv=>['--arg1', '{"foo": false}',
            name=>"yaml+json syntax error");
 
 {
+    my $meta = {
+        v => 1.1,
+        args => {
+            arg1 => {schema=>'hash', req=>1, pos=>0},
+        },
+    };
+    test_getargs(meta=>$meta, argv=>['[foo]'],
+                 args=>{arg1=>['foo']},
+                 name=>"nonscalar argv, yaml/json parsing");
+
+    $meta = {
+        v => 1.1,
+        args => {
+            arg1 => {schema=>'array', req=>1, pos=>0, greedy=>1},
+        },
+    };
+    test_getargs(meta=>$meta, argv=>['[foo]'],
+                 args=>{arg1=>[['foo']]},
+                 name=>"nonscalar argv, yaml/json parsing, greedy");
+}
+
+{
     my $extra  = 0;
     my $extra2 = 0;
     test_getargs(meta=>$meta, argv=>[qw/--arg1 1 --arg2 2 --extra --extra2 6/],

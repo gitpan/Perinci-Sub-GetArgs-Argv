@@ -3,7 +3,7 @@ NAME
     arguments (@ARGV)
 
 VERSION
-    version 0.22
+    version 0.23
 
 SYNOPSIS
      use Perinci::Sub::GetArgs::Argv;
@@ -13,11 +13,10 @@ SYNOPSIS
 DESCRIPTION
     This module provides "get_args_from_argv()", which parses command line
     arguments (@ARGV) into subroutine arguments (%args). This module is used
-    by Perinci::CmdLine.
+    by Perinci::CmdLine. For explanation on how command-line options are
+    processed, see Perinci::CmdLine's documentation.
 
     This module uses Log::Any for logging framework.
-
-    This module has Rinci metadata.
 
     This module has Rinci metadata.
 
@@ -38,8 +37,6 @@ FUNCTIONS
     None are exported by default, but they are exportable.
 
   get_args_from_argv(%args) -> [status, msg, result, meta]
-    Get subroutine arguments (%args) from command-line arguments (@ARGV).
-
     Using information in function metadata's 'args' property, parse command
     line arguments '@argv' into hash '%args', suitable for passing into
     subs.
@@ -68,7 +65,7 @@ FUNCTIONS
         This option will be passed to Perinci::Sub::GetArgs::Array's
         allow*extra*elems.
 
-    *   argv* => *array*
+    *   argv => *array*
 
         If not specified, defaults to @ARGV
 

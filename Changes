@@ -1,5 +1,10 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.23     2013-08-15 (SHARYANTO)
+
+         - Perform JSON/YAML parsing for command-line arguments too.
+
+
 0.22     2013-04-05 (SHARYANTO)
 
          - Add no_getopt_compat Getopt::Long::Configure to disregard "+" as
@@ -36,8 +41,8 @@ Revision history for Perinci-Sub-GetArgs-Agv
 
 0.19     2012-07-23 (SHARYANTO)
 
-         These changes are made to support `cmdline_src` arg spec key (Rinci
-         1.1.21+). Actual implementation will be done by Perinci::CmdLine.
+         - These changes are made to support `cmdline_src` arg spec key (Rinci
+           1.1.21+). Actual implementation will be done by Perinci::CmdLine.
 
          - Add 'on_missing_required_args' option.
 
@@ -88,49 +93,49 @@ Revision history for Perinci-Sub-GetArgs-Agv
 
 0.13     2012-03-23 (SHARYANTO)
 
-         Support arguments with dot (e.g. 'with.dot') using --with-dot syntax.
+         - Support arguments with dot (e.g. 'with.dot') using --with-dot syntax.
 
 
 0.12     2012-02-28 (SHARYANTO)
 
-         Parse arg's 'cmdline_aliases'.
+         - Parse arg's 'cmdline_aliases'.
 
 
 0.11     2012-02-22 (SHARYANTO)
 
-         Rename distribution from Sub-Spec-GetArgs-Argv to
-         Perinci-Sub-GetArgs-Agv.
+         - Rename distribution from Sub-Spec-GetArgs-Argv to
+           Perinci-Sub-GetArgs-Agv.
 
 
 0.10     2012-01-27 (SHARYANTO)
 
-         No functional changes. Build fix.
+         - No functional changes. Build fix.
 
 
 0.09     2012-01-27 (SHARYANTO)
 
-         No functional changes. Upgrade to Data-Sah-0.02.
+         - No functional changes. Upgrade to Data-Sah-0.02.
 
 
 0.08     2012-01-20 (SHARYANTO)
 
-         No functional changes. Mark deprecation.
+         - No functional changes. Mark deprecation.
 
 
 0.07     2011-11-23 (SHARYANTO)
 
-         No functional changes. Replace Data::Sah::Util with Data::Sah.
+         - No functional changes. Replace Data::Sah::Util with Data::Sah.
 
 
 0.06     2011-08-31 (SHARYANTO)
 
-         No functional changes. Updated because _parse_schema() is moved from
-         Sub::Spec::Utils to Data::Sah::Util.
+         - No functional changes. Updated because _parse_schema() is moved from
+           Sub::Spec::Utils to Data::Sah::Util.
 
 
 0.05     2011-08-25 (SHARYANTO)
 
-         No functional changes. Update to Sub::Spec 0.15.
+         - No functional changes. Update to Sub::Spec 0.15.
 
 
 0.04     2011-08-03 (SHARYANTO)
@@ -155,11 +160,11 @@ Revision history for Perinci-Sub-GetArgs-Agv
 
 0.02     2011-07-26 (SHARYANTO)
 
-         No functional changes. Allow Sub::Spec::CmdLine to access an internal
-         variable (yeah, some coupling still exists). Localize
-         Getopt::Long::Configure() effect.
+         - No functional changes. Allow Sub::Spec::CmdLine to access an internal
+           variable (yeah, some coupling still exists). Localize
+           Getopt::Long::Configure() effect.
 
 
 0.01     2011-07-26 (SHARYANTO)
 
-         First release, spun off from Sub::Spec::CmdLine.
+         - First release, spun off from Sub::Spec::CmdLine.
