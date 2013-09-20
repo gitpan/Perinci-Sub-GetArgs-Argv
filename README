@@ -3,7 +3,7 @@ NAME
     arguments (@ARGV)
 
 VERSION
-    version 0.23
+    version 0.24
 
 SYNOPSIS
      use Perinci::Sub::GetArgs::Argv;

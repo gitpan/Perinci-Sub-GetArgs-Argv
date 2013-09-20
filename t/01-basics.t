@@ -221,6 +221,26 @@ test_getargs(meta=>$meta, argv=>[qw/--S_foo/], # XXX S-foo not yet provided?
              args=>{s2=>"foo"},
              name=>"cmdline_aliases: S_foo");
 
+subtest "cmdline_aliases: bool alias with code does not get --noX" => sub {
+    my $meta = {
+        v => 1.1,
+        args => {
+            true => {
+                schema=>'bool',
+                cmdline_aliases => {
+                    false => {
+                        code => sub { ${$_[0]}{true} = 0 },
+                    },
+                },
+            },
+        },
+    };
+    test_getargs(meta=>$meta, argv=>[qw/--true/]);
+    test_getargs(meta=>$meta, argv=>[qw/--notrue/]);
+    test_getargs(meta=>$meta, argv=>[qw/--false/]);
+    test_getargs(meta=>$meta, argv=>[qw/--nofalse/], error=>1);
+};
+
 # test handling of array of scalar, --foo 1 --foo 2
 
 $meta = {
@@ -324,7 +344,9 @@ done_testing();
 sub test_getargs {
     my (%args) = @_;
 
-    subtest $args{name} => sub {
+    my $name = $args{name} // "getargs(".join(", ", @{$args{argv}}).")";
+
+    subtest $name => sub {
         my $argv = clone($args{argv});
         my $res;
         my %input_args = (argv=>$argv, meta=>$args{meta});
@@ -353,4 +375,3 @@ sub test_getargs {
         done_testing();
     };
 }
-

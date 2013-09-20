@@ -1,5 +1,11 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.24     2013-09-20 (SHARYANTO)
+
+         - cmdline_alias for bool doesn't get --noX ("alias!") if it specifies
+           code, which makes more sense.
+
+
 0.23     2013-08-15 (SHARYANTO)
 
          - Perform JSON/YAML parsing for command-line arguments too.
