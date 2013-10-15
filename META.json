@@ -29,6 +29,7 @@
       },
       "runtime" : {
          "requires" : {
+            "Data::Clean::FromJSON" : "0",
             "Data::Sah" : "0.02",
             "JSON" : "0",
             "Log::Any" : "0",
@@ -41,10 +42,11 @@
       },
       "test" : {
          "requires" : {
-            "Capture::Tiny" : "0",
             "Data::Clone" : "0",
-            "Test::More" : "0.98",
-            "blib" : "0"
+            "File::Spec" : "0",
+            "IO::Handle" : "0",
+            "IPC::Open3" : "0",
+            "Test::More" : "0.98"
          }
       }
    },
@@ -55,6 +57,6 @@
          "url" : "http://github.com/sharyanto/perl-Perinci-Sub-GetArgs-Argv"
       }
    },
-   "version" : "0.24"
+   "version" : "0.25"
 }
 

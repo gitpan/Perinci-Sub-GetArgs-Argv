@@ -1,5 +1,12 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.25     2013-10-15 (SHARYANTO)
+
+         - Use Data::Clean::FromJSON so that Data::Sah-generated validator code
+           in wrapped functions doesn't choke with JSON::{PP,XS}::Boolean
+           objects.
+
+
 0.24     2013-09-20 (SHARYANTO)
 
          - cmdline_alias for bool doesn't get --noX ("alias!") if it specifies

@@ -3,7 +3,7 @@ NAME
     arguments (@ARGV)
 
 VERSION
-    version 0.24
+    version 0.25
 
 SYNOPSIS
      use Perinci::Sub::GetArgs::Argv;
@@ -37,6 +37,8 @@ FUNCTIONS
     None are exported by default, but they are exportable.
 
   get_args_from_argv(%args) -> [status, msg, result, meta]
+    Get subroutine arguments (%args) from command-line arguments (@ARGV).
+
     Using information in function metadata's 'args' property, parse command
     line arguments '@argv' into hash '%args', suitable for passing into
     subs.

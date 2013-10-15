@@ -3,10 +3,11 @@ abstract: 'Get subroutine arguments from command line arguments (@ARGV)'
 author:
   - 'Steven Haryanto <stevenharyanto@gmail.com>'
 build_requires:
-  Capture::Tiny: 0
   Data::Clone: 0
+  File::Spec: 0
+  IO::Handle: 0
+  IPC::Open3: 0
   Test::More: 0.98
-  blib: 0
 configure_requires:
   ExtUtils::MakeMaker: 6.30
 dynamic_config: 0
@@ -17,6 +18,7 @@ meta-spec:
   version: 1.4
 name: Perinci-Sub-GetArgs-Argv
 requires:
+  Data::Clean::FromJSON: 0
   Data::Sah: 0.02
   JSON: 0
   Log::Any: 0
@@ -28,4 +30,4 @@ requires:
 resources:
   homepage: http://search.cpan.org/dist/Perinci-Sub-GetArgs-Argv/
   repository: http://github.com/sharyanto/perl-Perinci-Sub-GetArgs-Argv
-version: 0.24
+version: 0.25

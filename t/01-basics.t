@@ -52,6 +52,13 @@ test_getargs(meta=>$meta, argv=>['--arg1', '{"foo":0}',
                                '--arg5', '{"foo":0}'],
            args=>{arg1=>'{"foo":0}', arg2=>'', arg5=>{foo=>0}},
            name=>"json parsing, done on nonscalars");
+test_getargs(meta=>$meta,
+             argv=>[
+                 '--arg1', 's', '--arg2', 's',
+                 '--arg5', '{"true":true,"false":false}',
+             ],
+             args=>{arg1=>"s", arg2=>"s", arg5=>{true=>1, false=>0}},
+             name=>"json true/false");
 test_getargs(meta=>$meta, argv=>['--arg1', '{foo: false}',
                                '--arg2', '',
                                '--arg5', '{foo: false}'],

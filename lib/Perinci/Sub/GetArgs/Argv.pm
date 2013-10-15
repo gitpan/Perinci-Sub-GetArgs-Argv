@@ -8,13 +8,13 @@ use Log::Any '$log';
 use Data::Clone;
 use Data::Sah;
 use Perinci::Sub::GetArgs::Array qw(get_args_from_array);
-use Perinci::Sub::Util qw(wrapres);
+use Perinci::Sub::Util qw(err);
 
 use Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(get_args_from_argv);
 
-our $VERSION = '0.24'; # VERSION
+our $VERSION = '0.25'; # VERSION
 
 our %SPEC;
 
@@ -22,13 +22,22 @@ my $re_simple_scalar = qr/^(str|num|int|float|bool)$/;
 
 # retun ($success?, $errmsg, $res)
 sub _parse_json {
+    require Data::Clean::FromJSON;
     require JSON;
 
     my $str = shift;
 
     state $json = JSON->new->allow_nonref;
+
+    # to rid of those JSON::XS::Boolean objects which currently choke
+    # Data::Sah-generated validator code. in the future Data::Sah can be
+    # modified to handle those, or we use a fork of JSON::XS which doesn't
+    # produce those in the first place (probably only when performance is
+    # critical).
+    state $cleanser = Data::Clean::FromJSON->new;
+
     my $res;
-    eval { $res = $json->decode($str) };
+    eval { $res = $json->decode($str); $cleanser->clean_in_place($res) };
     my $e = $@;
     return (!$e, $e, $res);
 }
@@ -361,7 +370,7 @@ sub get_args_from_argv {
             allow_extra_elems => $allow_extra_elems,
         );
         if ($res->[0] != 200 && $strict) {
-            return wrapres([500, "Get args from array failed: "], $res);
+            return err(500, "Get args from array failed", $res);
         } elsif ($res->[0] == 200) {
             my $pos_args = $res->[2];
             for my $name (keys %$pos_args) {
@@ -456,7 +465,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-version 0.24
+version 0.25
 
 =head1 SYNOPSIS
 
@@ -498,6 +507,8 @@ the same terms as the Perl 5 programming language system itself.
 None are exported by default, but they are exportable.
 
 =head2 get_args_from_argv(%args) -> [status, msg, result, meta]
+
+Get subroutine arguments (%args) from command-line arguments (@ARGV).
 
 Using information in function metadata's 'args' property, parse command line
 arguments '@argv' into hash '%args', suitable for passing into subs.

@@ -20,6 +20,7 @@ my %WriteMakefileArgs = (
   "LICENSE" => "perl",
   "NAME" => "Perinci::Sub::GetArgs::Argv",
   "PREREQ_PM" => {
+    "Data::Clean::FromJSON" => 0,
     "Data::Sah" => "0.02",
     "JSON" => 0,
     "Log::Any" => 0,
@@ -29,12 +30,13 @@ my %WriteMakefileArgs = (
     "YAML::Syck" => 0
   },
   "TEST_REQUIRES" => {
-    "Capture::Tiny" => 0,
     "Data::Clone" => 0,
-    "Test::More" => "0.98",
-    "blib" => 0
+    "File::Spec" => 0,
+    "IO::Handle" => 0,
+    "IPC::Open3" => 0,
+    "Test::More" => "0.98"
   },
-  "VERSION" => "0.24",
+  "VERSION" => "0.25",
   "test" => {
     "TESTS" => "t/*.t"
   }
