@@ -26,7 +26,7 @@ my %WriteMakefileArgs = (
     "Log::Any" => 0,
     "Perinci::Sub::GetArgs::Array" => "0.09",
     "Perinci::Sub::Util" => 0,
-    "Rinci" => "v1.1.10",
+    "Rinci" => "v1.1.40",
     "YAML::Syck" => 0
   },
   "TEST_REQUIRES" => {
@@ -36,7 +36,7 @@ my %WriteMakefileArgs = (
     "IPC::Open3" => 0,
     "Test::More" => "0.98"
   },
-  "VERSION" => "0.26",
+  "VERSION" => "0.27",
   "test" => {
     "TESTS" => "t/*.t"
   }

@@ -1,5 +1,11 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.27     2013-10-28 (SHARYANTO)
+
+         - Rename result metadata 'func.has_missing_arg' (bool) to
+           'func.missing_arg' (str) to report the name of the missing argument.
+
+
 0.26     2013-10-28 (SHARYANTO)
 
          - When check_required_args=0 and there is missing argument, provide

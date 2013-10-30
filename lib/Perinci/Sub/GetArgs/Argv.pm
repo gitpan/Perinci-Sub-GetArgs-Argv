@@ -14,7 +14,7 @@ use Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(get_args_from_argv);
 
-our $VERSION = '0.26'; # VERSION
+our $VERSION = '0.27'; # VERSION
 
 our %SPEC;
 
@@ -431,7 +431,7 @@ sub get_args_from_argv {
 
     # 4. check required args
 
-    my $has_missing_arg = 0;
+    my $missing_arg;
     while (my ($a, $as) = each %$args_p) {
         if (!exists($args->{$a})) {
             # give a chance to hook to set missing arg
@@ -439,7 +439,7 @@ sub get_args_from_argv {
                 $on_missing->(arg=>$a, args=>$args, spec=>$as);
             }
             if ($as->{req} && !exists($args->{$a})) {
-                $has_missing_arg = 1;
+                $missing_arg = $a;
                 if (($input_args{check_required_args} // 1) && $strict) {
                     return [400, "Missing required argument: $a"];
                 }
@@ -449,7 +449,7 @@ sub get_args_from_argv {
 
     $log->tracef("<- get_args_from_argv(), args=%s, remaining argv=%s",
                  $args, $argv);
-    [200, "OK", $args, {"func.has_missing_arg"=>$has_missing_arg}];
+    [200, "OK", $args, {"func.missing_arg"=>$missing_arg}];
 }
 
 1;

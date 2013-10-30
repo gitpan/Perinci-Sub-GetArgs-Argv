@@ -153,8 +153,7 @@ test_getargs(meta=>$meta,
              name=>"opt: check_required_args=0",
              posttest => sub {
                  my $res = shift;
-                 ok($res->[3]{'func.has_missing_arg'},
-                    'func.has_missing_arg result metadata set');
+                 is($res->[3]{'func.missing_arg'}, 'arg1');
              },
          );
 
