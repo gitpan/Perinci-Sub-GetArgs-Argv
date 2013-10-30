@@ -4,7 +4,7 @@
       "Steven Haryanto <stevenharyanto@gmail.com>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 4.300035, CPAN::Meta::Converter version 2.132140",
+   "generated_by" : "Dist::Zilla version 4.300039, CPAN::Meta::Converter version 2.132140",
    "license" : [
       "perl_5"
    ],
@@ -29,7 +29,7 @@
       },
       "runtime" : {
          "requires" : {
-            "Data::Clean::FromJSON" : "0",
+            "Data::Clean::FromJSON" : "0.11",
             "Data::Sah" : "0.02",
             "JSON" : "0",
             "Log::Any" : "0",
@@ -51,12 +51,7 @@
       }
    },
    "release_status" : "stable",
-   "resources" : {
-      "homepage" : "http://search.cpan.org/dist/Perinci-Sub-GetArgs-Argv/",
-      "repository" : {
-         "url" : "http://github.com/sharyanto/perl-Perinci-Sub-GetArgs-Argv"
-      }
-   },
-   "version" : "0.25"
+   "resources" : {},
+   "version" : "0.26"
 }
 

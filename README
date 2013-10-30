@@ -2,9 +2,6 @@ NAME
     Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line
     arguments (@ARGV)
 
-VERSION
-    version 0.25
-
 SYNOPSIS
      use Perinci::Sub::GetArgs::Argv;
 
@@ -20,22 +17,7 @@ DESCRIPTION
 
     This module has Rinci metadata.
 
-FAQ
-SEE ALSO
-    Perinci
-
-AUTHOR
-    Steven Haryanto <stevenharyanto@gmail.com>
-
-COPYRIGHT AND LICENSE
-    This software is copyright (c) 2013 by Steven Haryanto.
-
-    This is free software; you can redistribute it and/or modify it under
-    the same terms as the Perl 5 programming language system itself.
-
 FUNCTIONS
-    None are exported by default, but they are exportable.
-
   get_args_from_argv(%args) -> [status, msg, result, meta]
     Get subroutine arguments (%args) from command-line arguments (@ARGV).
 
@@ -166,4 +148,33 @@ FUNCTIONS
     message, or 'OK' if status is 200. Third element (result) is optional,
     the actual result. Fourth element (meta) is called result metadata and
     is optional, a hash that contains extra information.
+
+FAQ
+SEE ALSO
+    Perinci
+
+HOMEPAGE
+    Please visit the project's homepage at
+    <https://metacpan.org/release/Perinci-Sub-GetArgs-Argv>.
+
+SOURCE
+    Source repository is at
+    <https://github.com/sharyanto/perl-Perinci-Sub-GetArgs-Argv>.
+
+BUGS
+    Please report any bugs or feature requests on the bugtracker website
+    http://rt.cpan.org/Public/Dist/Display.html?Name=Perinci-Sub-GetArgs-Arg
+    v
+
+    When submitting a bug or request, please include a test-file or a patch
+    to an existing test-file that illustrates the bug or desired feature.
+
+AUTHOR
+    Steven Haryanto <stevenharyanto@gmail.com>
+
+COPYRIGHT AND LICENSE
+    This software is copyright (c) 2013 by Steven Haryanto.
+
+    This is free software; you can redistribute it and/or modify it under
+    the same terms as the Perl 5 programming language system itself.
 

@@ -1,5 +1,11 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.26     2013-10-28 (SHARYANTO)
+
+         - When check_required_args=0 and there is missing argument, provide
+           hint to user via 'func.has_missing_arg' result metadata.
+
+
 0.25     2013-10-15 (SHARYANTO)
 
          - Use Data::Clean::FromJSON so that Data::Sah-generated validator code

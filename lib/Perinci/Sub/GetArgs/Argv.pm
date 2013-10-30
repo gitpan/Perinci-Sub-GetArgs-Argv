@@ -14,7 +14,7 @@ use Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(get_args_from_argv);
 
-our $VERSION = '0.25'; # VERSION
+our $VERSION = '0.26'; # VERSION
 
 our %SPEC;
 
@@ -34,7 +34,7 @@ sub _parse_json {
     # modified to handle those, or we use a fork of JSON::XS which doesn't
     # produce those in the first place (probably only when performance is
     # critical).
-    state $cleanser = Data::Clean::FromJSON->new;
+    state $cleanser = Data::Clean::FromJSON->get_cleanser;
 
     my $res;
     eval { $res = $json->decode($str); $cleanser->clean_in_place($res) };
@@ -431,15 +431,17 @@ sub get_args_from_argv {
 
     # 4. check required args
 
-    if ($input_args{check_required_args} // 1) {
-        while (my ($a, $as) = each %$args_p) {
-            if (!exists($args->{$a})) {
-                # give a chance to hook to set missing arg
-                if ($on_missing) {
-                    $on_missing->(arg=>$a, args=>$args, spec=>$as);
-                }
-                if ($as->{req} && !exists($args->{$a})) {
-                    return [400, "Missing required argument: $a"] if $strict;
+    my $has_missing_arg = 0;
+    while (my ($a, $as) = each %$args_p) {
+        if (!exists($args->{$a})) {
+            # give a chance to hook to set missing arg
+            if ($on_missing) {
+                $on_missing->(arg=>$a, args=>$args, spec=>$as);
+            }
+            if ($as->{req} && !exists($args->{$a})) {
+                $has_missing_arg = 1;
+                if (($input_args{check_required_args} // 1) && $strict) {
+                    return [400, "Missing required argument: $a"];
                 }
             }
         }
@@ -447,7 +449,7 @@ sub get_args_from_argv {
 
     $log->tracef("<- get_args_from_argv(), args=%s, remaining argv=%s",
                  $args, $argv);
-    [200, "OK", $args];
+    [200, "OK", $args, {"func.has_missing_arg"=>$has_missing_arg}];
 }
 
 1;
@@ -462,10 +464,6 @@ __END__
 =head1 NAME
 
 Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line arguments (@ARGV)
-
-=head1 VERSION
-
-version 0.25
 
 =head1 SYNOPSIS
 
@@ -484,27 +482,8 @@ This module uses L<Log::Any> for logging framework.
 
 This module has L<Rinci> metadata.
 
-=head1 FAQ
-
-=head1 SEE ALSO
-
-L<Perinci>
-
-=head1 AUTHOR
-
-Steven Haryanto <stevenharyanto@gmail.com>
-
-=head1 COPYRIGHT AND LICENSE
-
-This software is copyright (c) 2013 by Steven Haryanto.
-
-This is free software; you can redistribute it and/or modify it under
-the same terms as the Perl 5 programming language system itself.
-
 =head1 FUNCTIONS
 
-
-None are exported by default, but they are exportable.
 
 =head2 get_args_from_argv(%args) -> [status, msg, result, meta]
 
@@ -627,5 +606,39 @@ strict is used by, for example, Perinci::BashComplete.
 Return value:
 
 Returns an enveloped result (an array). First element (status) is an integer containing HTTP status code (200 means OK, 4xx caller error, 5xx function error). Second element (msg) is a string containing error message, or 'OK' if status is 200. Third element (result) is optional, the actual result. Fourth element (meta) is called result metadata and is optional, a hash that contains extra information.
+
+=head1 FAQ
+
+=head1 SEE ALSO
+
+L<Perinci>
+
+=head1 HOMEPAGE
+
+Please visit the project's homepage at L<https://metacpan.org/release/Perinci-Sub-GetArgs-Argv>.
+
+=head1 SOURCE
+
+Source repository is at L<https://github.com/sharyanto/perl-Perinci-Sub-GetArgs-Argv>.
+
+=head1 BUGS
+
+Please report any bugs or feature requests on the bugtracker website
+http://rt.cpan.org/Public/Dist/Display.html?Name=Perinci-Sub-GetArgs-Argv
+
+When submitting a bug or request, please include a test-file or a
+patch to an existing test-file that illustrates the bug or desired
+feature.
+
+=head1 AUTHOR
+
+Steven Haryanto <stevenharyanto@gmail.com>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2013 by Steven Haryanto.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
