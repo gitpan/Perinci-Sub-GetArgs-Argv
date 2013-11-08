@@ -11,7 +11,7 @@ build_requires:
 configure_requires:
   ExtUtils::MakeMaker: 6.30
 dynamic_config: 0
-generated_by: 'Dist::Zilla version 4.300039, CPAN::Meta::Converter version 2.132140'
+generated_by: 'Dist::Zilla version 4.300038, CPAN::Meta::Converter version 2.132510'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -27,5 +27,8 @@ requires:
   Rinci: v1.1.40
   YAML::Syck: 0
   perl: 5.010001
-resources: {}
-version: 0.27
+resources:
+  bugtracker: https://rt.cpan.org/Public/Dist/Display.html?Name=Perinci-Sub-GetArgs-Argv
+  homepage: https://metacpan.org/release/Perinci-Sub-GetArgs-Argv
+  repository: git://github.com/sharyanto/perl-Perinci-Sub-GetArgs-Argv.git
+version: 0.28

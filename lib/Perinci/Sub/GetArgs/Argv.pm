@@ -14,7 +14,7 @@ use Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(get_args_from_argv);
 
-our $VERSION = '0.27'; # VERSION
+our $VERSION = '0.28'; # VERSION
 
 our %SPEC;
 
@@ -106,7 +106,7 @@ If set to 0, will still return parsed argv even if there are parsing errors. If
 set to 1 (the default), will die upon error.
 
 Normally you would want to use strict mode, for more error checking. Setting off
-strict is used by, for example, Perinci::BashComplete.
+strict is used by, for example, Perinci::Sub::Complete.
 
 _
         },
@@ -434,15 +434,15 @@ sub get_args_from_argv {
     my $missing_arg;
     while (my ($a, $as) = each %$args_p) {
         if (!exists($args->{$a})) {
+            next unless $as->{req};
             # give a chance to hook to set missing arg
             if ($on_missing) {
                 $on_missing->(arg=>$a, args=>$args, spec=>$as);
             }
-            if ($as->{req} && !exists($args->{$a})) {
-                $missing_arg = $a;
-                if (($input_args{check_required_args} // 1) && $strict) {
-                    return [400, "Missing required argument: $a"];
-                }
+            next if exists $args->{$a};
+            $missing_arg = $a;
+            if (($input_args{check_required_args} // 1) && $strict) {
+                return [400, "Missing required argument: $a"];
             }
         }
     }
@@ -465,6 +465,10 @@ __END__
 
 Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line arguments (@ARGV)
 
+=head1 VERSION
+
+version 0.28
+
 =head1 SYNOPSIS
 
  use Perinci::Sub::GetArgs::Argv;
@@ -485,9 +489,9 @@ This module has L<Rinci> metadata.
 =head1 FUNCTIONS
 
 
-=head2 get_args_from_argv(%args) -> [status, msg, result, meta]
+None are exported by default, but they are exportable.
 
-Get subroutine arguments (%args) from command-line arguments (@ARGV).
+=head2 get_args_from_argv(%args) -> [status, msg, result, meta]
 
 Using information in function metadata's 'args' property, parse command line
 arguments '@argv' into hash '%args', suitable for passing into subs.
@@ -599,7 +603,7 @@ If set to 0, will still return parsed argv even if there are parsing errors. If
 set to 1 (the default), will die upon error.
 
 Normally you would want to use strict mode, for more error checking. Setting off
-strict is used by, for example, Perinci::BashComplete.
+strict is used by, for example, Perinci::Sub::Complete.
 
 =back
 
@@ -624,7 +628,8 @@ Source repository is at L<https://github.com/sharyanto/perl-Perinci-Sub-GetArgs-
 =head1 BUGS
 
 Please report any bugs or feature requests on the bugtracker website
-http://rt.cpan.org/Public/Dist/Display.html?Name=Perinci-Sub-GetArgs-Argv
+L<https://rt.cpan.org/Public/Dist/Display.html?Name=Perinci-Sub-GetArgs-Arg
+v>
 
 When submitting a bug or request, please include a test-file or a
 patch to an existing test-file that illustrates the bug or desired

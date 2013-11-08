@@ -2,6 +2,9 @@ NAME
     Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line
     arguments (@ARGV)
 
+VERSION
+    version 0.28
+
 SYNOPSIS
      use Perinci::Sub::GetArgs::Argv;
 
@@ -18,9 +21,9 @@ DESCRIPTION
     This module has Rinci metadata.
 
 FUNCTIONS
-  get_args_from_argv(%args) -> [status, msg, result, meta]
-    Get subroutine arguments (%args) from command-line arguments (@ARGV).
+    None are exported by default, but they are exportable.
 
+  get_args_from_argv(%args) -> [status, msg, result, meta]
     Using information in function metadata's 'args' property, parse command
     line arguments '@argv' into hash '%args', suitable for passing into
     subs.
@@ -138,7 +141,7 @@ FUNCTIONS
         errors. If set to 1 (the default), will die upon error.
 
         Normally you would want to use strict mode, for more error checking.
-        Setting off strict is used by, for example, Perinci::BashComplete.
+        Setting off strict is used by, for example, Perinci::Sub::Complete.
 
     Return value:
 
@@ -163,8 +166,8 @@ SOURCE
 
 BUGS
     Please report any bugs or feature requests on the bugtracker website
-    http://rt.cpan.org/Public/Dist/Display.html?Name=Perinci-Sub-GetArgs-Arg
-    v
+    "/rt.cpan.org/Public/Dist/Display.html?Name=Perinci-Sub-GetArgs-Arg v"
+    in https:
 
     When submitting a bug or request, please include a test-file or a patch
     to an existing test-file that illustrates the bug or desired feature.

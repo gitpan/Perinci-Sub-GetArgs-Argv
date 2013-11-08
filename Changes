@@ -1,5 +1,13 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.28     2013-11-08 (SHARYANTO)
+
+         [BUG FIXES]
+
+         - on_missing_required_args hook should also be called for required
+           args, not all missing args.
+
+
 0.27     2013-10-28 (SHARYANTO)
 
          - Rename result metadata 'func.has_missing_arg' (bool) to

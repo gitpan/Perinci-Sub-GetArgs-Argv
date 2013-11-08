@@ -318,11 +318,11 @@ $meta = {
     v => 1.1,
     args => {
         a => {schema=>'str*', req=>1},
-        b => {schema=>'str*', cmdline_src=>'stdin'},
+        b => {schema=>'str*'},
     },
 };
 test_getargs(meta=>$meta, argv=>[qw//],
-             args=>{a=>'v1', b=>'v2'},
+             args=>{a=>'v1'},
              on_missing_required_args => sub {
                  my %args = @_;
                  my $arg  = $args{arg};
@@ -331,7 +331,7 @@ test_getargs(meta=>$meta, argv=>[qw//],
 
                  if ($arg eq 'a') {
                      $args->{$arg} = 'v1';
-                 } elsif ($spec->{cmdline_src} = 'stdin') {
+                 } else {
                      $args->{$arg} = 'v2';
                  }
              },
