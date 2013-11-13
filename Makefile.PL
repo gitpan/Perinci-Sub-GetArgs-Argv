@@ -24,7 +24,7 @@ my %WriteMakefileArgs = (
     "Data::Sah" => "0.02",
     "JSON" => 0,
     "Log::Any" => 0,
-    "Perinci::Sub::GetArgs::Array" => "0.09",
+    "Perinci::Sub::GetArgs::Array" => "0.11",
     "Perinci::Sub::Util" => 0,
     "Rinci" => "v1.1.40",
     "YAML::Syck" => 0
@@ -36,37 +36,34 @@ my %WriteMakefileArgs = (
     "IPC::Open3" => 0,
     "Test::More" => "0.98"
   },
-  "VERSION" => "0.28",
+  "VERSION" => "0.29",
   "test" => {
     "TESTS" => "t/*.t"
   }
 );
 
 
-unless ( eval { ExtUtils::MakeMaker->VERSION(6.63_03) } ) {
-  my $tr = delete $WriteMakefileArgs{TEST_REQUIRES};
-  my $br = $WriteMakefileArgs{BUILD_REQUIRES};
-  for my $mod ( keys %$tr ) {
-    if ( exists $br->{$mod} ) {
-      $br->{$mod} = $tr->{$mod} if $tr->{$mod} > $br->{$mod};
-    }
-    else {
-      $br->{$mod} = $tr->{$mod};
-    }
-  }
-}
+my %FallbackPrereqs = (
+  "Data::Clean::FromJSON" => "0.11",
+  "Data::Clone" => 0,
+  "Data::Sah" => "0.02",
+  "File::Spec" => 0,
+  "IO::Handle" => 0,
+  "IPC::Open3" => 0,
+  "JSON" => 0,
+  "Log::Any" => 0,
+  "Perinci::Sub::GetArgs::Array" => "0.11",
+  "Perinci::Sub::Util" => 0,
+  "Rinci" => "v1.1.40",
+  "Test::More" => "0.98",
+  "YAML::Syck" => 0
+);
 
-unless ( eval { ExtUtils::MakeMaker->VERSION(6.56) } ) {
-  my $br = delete $WriteMakefileArgs{BUILD_REQUIRES};
-  my $pp = $WriteMakefileArgs{PREREQ_PM};
-  for my $mod ( keys %$br ) {
-    if ( exists $pp->{$mod} ) {
-      $pp->{$mod} = $br->{$mod} if $br->{$mod} > $pp->{$mod};
-    }
-    else {
-      $pp->{$mod} = $br->{$mod};
-    }
-  }
+
+unless ( eval { ExtUtils::MakeMaker->VERSION(6.63_03) } ) {
+  delete $WriteMakefileArgs{TEST_REQUIRES};
+  delete $WriteMakefileArgs{BUILD_REQUIRES};
+  $WriteMakefileArgs{PREREQ_PM} = \%FallbackPrereqs;
 }
 
 delete $WriteMakefileArgs{CONFIGURE_REQUIRES}

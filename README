@@ -3,7 +3,7 @@ NAME
     arguments (@ARGV)
 
 VERSION
-    version 0.28
+    version 0.29
 
 SYNOPSIS
      use Perinci::Sub::GetArgs::Argv;
@@ -166,8 +166,8 @@ SOURCE
 
 BUGS
     Please report any bugs or feature requests on the bugtracker website
-    "/rt.cpan.org/Public/Dist/Display.html?Name=Perinci-Sub-GetArgs-Arg v"
-    in https:
+    <https://rt.cpan.org/Public/Dist/Display.html?Name=Perinci-Sub-GetArgs-A
+    rgv>
 
     When submitting a bug or request, please include a test-file or a patch
     to an existing test-file that illustrates the bug or desired feature.

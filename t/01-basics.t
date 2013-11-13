@@ -27,14 +27,17 @@ test_getargs(meta=>$meta, argv=>[qw/--arg1 1 --arg2 2 --arg3 3/],
            args=>{arg1=>1, arg2=>2, arg3=>3},
            name=>"optional given = ok");
 test_getargs(meta=>$meta, argv=>[qw/1 2/],
-           args=>{arg1=>1, arg2=>2},
-           name=>"arg_pos");
+             args=>{arg1=>1, arg2=>2},
+             remaining_argv=>[],
+             name=>"arg_pos");
 test_getargs(meta=>$meta, argv=>[qw/1 2 --arg3 3/],
-           args=>{arg1=>1, arg2=>2, arg3=>3},
-           name=>"mixed arg_pos with opts (1)");
+             args=>{arg1=>1, arg2=>2, arg3=>3},
+             remaining_argv=>[],
+             name=>"mixed arg_pos with opts (1)");
 test_getargs(meta=>$meta, argv=>[qw/1 --arg2 2/],
-           args=>{arg1=>1, arg2=>2},
-           name=>"mixed arg_pos with opts (2)");
+             args=>{arg1=>1, arg2=>2},
+             remaining_argv=>[],
+             name=>"mixed arg_pos with opts (2)");
 test_getargs(meta=>$meta, argv=>[qw/--arg1 1 2/], error=>1,
            name=>"mixed arg_pos with opts (clash)");
 test_getargs(meta=>$meta, argv=>[qw/--arg1 1 --arg2 2 3/], error=>1,
@@ -377,6 +380,10 @@ sub test_getargs {
         if ($args{args}) {
             is_deeply($res->[2], $args{args}, "result")
                 or diag explain $res->[2];
+        }
+        if ($args{remaining_argv}) {
+            is_deeply($argv, $args{remaining_argv}, "remaining argv")
+                or diag explain $argv;
         }
 
         if ($args{posttest}) {

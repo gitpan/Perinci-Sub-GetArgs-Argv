@@ -1,5 +1,13 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.29     2013-11-13 (SHARYANTO)
+
+         [BUG FIXES]
+
+         - To be consistent, 'argv' elements should also be emptied for
+           positional arguments.
+
+
 0.28     2013-11-08 (SHARYANTO)
 
          [BUG FIXES]
