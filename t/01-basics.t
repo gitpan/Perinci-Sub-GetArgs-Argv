@@ -352,6 +352,35 @@ test_getargs(meta=>$meta, argv=>[qw/-X=foo/],
              args=>{arg => '=foo'},
              name=>"Go::L configuration: bundling");
 
+{
+    my @x;
+    my $meta = {
+        v => 1.1,
+        args => {
+            arg => {
+                schema => ['array*' => of => 'str*'],
+                cmdline_aliases   => { A => {} },
+                cmdline_on_getopt => sub {
+                    push @x, {@_};
+                },
+            },
+            foo => { schema => 'bool' },
+        },
+    };
+    test_getargs(
+        name => 'cmdline_on_getopt',
+        meta => $meta,
+        argv => [qw/--arg 1 --foo -A 2/],
+        posttest => sub {
+            my $res = shift;
+            is_deeply(\@x, [
+                {arg=>'arg', args=>$res->[2], value=>1},
+                {arg=>'arg', args=>$res->[2], value=>2},
+            ]) or diag explain \@x;
+        },
+    );
+}
+
 DONE_TESTING:
 done_testing();
 

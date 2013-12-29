@@ -1,5 +1,10 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.30     2013-12-25 (SHARYANTO)
+
+         - Respect 'cmdline_on_getopt' argument spec (Rinci 1.1.43).
+
+
 0.29     2013-11-13 (SHARYANTO)
 
          [BUG FIXES]
