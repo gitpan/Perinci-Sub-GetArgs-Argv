@@ -1,5 +1,14 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.31     2014-01-21 (SHARYANTO)
+
+         [INCOMPATIBLE CHANGES]
+
+         - Interpret true return value from on_missing_required_args hook to
+           mean avoid complaining about missing argument, so we allow argument
+           to be missing in the final result.
+
+
 0.30     2013-12-25 (SHARYANTO)
 
          - Respect 'cmdline_on_getopt' argument spec (Rinci 1.1.43).

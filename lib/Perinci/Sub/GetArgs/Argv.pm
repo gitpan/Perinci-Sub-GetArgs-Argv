@@ -14,7 +14,7 @@ use Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(get_args_from_argv);
 
-our $VERSION = '0.30'; # VERSION
+our $VERSION = '0.31'; # VERSION
 
 our %SPEC;
 
@@ -195,6 +195,10 @@ specification key set).
 This hook will be called for each missing argument. It will be supplied hash
 arguments: (arg => $the_missing_argument_name, args =>
 $the_resulting_args_so_far, spec => $the_arg_spec).
+
+The hook can return true if it succeeds in making the missing situation
+resolved. In this case, the function won't complain about missing argument for
+the corresponding argument.
 
 _
         },
@@ -448,7 +452,7 @@ sub get_args_from_argv {
             next unless $as->{req};
             # give a chance to hook to set missing arg
             if ($on_missing) {
-                $on_missing->(arg=>$a, args=>$args, spec=>$as);
+                next if $on_missing->(arg=>$a, args=>$args, spec=>$as);
             }
             next if exists $args->{$a};
             $missing_arg = $a;
@@ -478,7 +482,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-version 0.30
+version 0.31
 
 =head1 SYNOPSIS
 
@@ -502,9 +506,8 @@ This module has L<Rinci> metadata.
 
 =head2 get_args_from_argv(%args) -> [status, msg, result, meta]
 
-{en_US Get subroutine arguments (%args) from command-line arguments (@ARGV)}.
+Get subroutine arguments (%args) from command-line arguments (@ARGV).
 
-{en_US 
 Using information in function metadata's 'args' property, parse command line
 arguments '@argv' into hash '%args', suitable for passing into subs.
 
@@ -518,7 +521,6 @@ other reasons, we want to be able to parse complex types.
 This function exists mostly to support command-line options parsing for
 Perinci::CmdLine. See its documentation, on the section of command-line
 options/argument parsing.
-}
 
 Arguments ('*' denotes required arguments):
 
@@ -526,9 +528,8 @@ Arguments ('*' denotes required arguments):
 
 =item * B<allow_extra_elems> => I<bool> (default: 0)
 
-{en_US Get subroutine arguments (%args) from command-line arguments (@ARGV)}.
+Get subroutine arguments (%args) from command-line arguments (@ARGV).
 
-{en_US 
 Using information in function metadata's 'args' property, parse command line
 arguments '@argv' into hash '%args', suitable for passing into subs.
 
@@ -542,13 +543,11 @@ other reasons, we want to be able to parse complex types.
 This function exists mostly to support command-line options parsing for
 Perinci::CmdLine. See its documentation, on the section of command-line
 options/argument parsing.
-}
 
 =item * B<argv> => I<array>
 
-{en_US Get subroutine arguments (%args) from command-line arguments (@ARGV)}.
+Get subroutine arguments (%args) from command-line arguments (@ARGV).
 
-{en_US 
 Using information in function metadata's 'args' property, parse command line
 arguments '@argv' into hash '%args', suitable for passing into subs.
 
@@ -562,13 +561,11 @@ other reasons, we want to be able to parse complex types.
 This function exists mostly to support command-line options parsing for
 Perinci::CmdLine. See its documentation, on the section of command-line
 options/argument parsing.
-}
 
 =item * B<check_required_args> => I<bool> (default: 1)
 
-{en_US Get subroutine arguments (%args) from command-line arguments (@ARGV)}.
+Get subroutine arguments (%args) from command-line arguments (@ARGV).
 
-{en_US 
 Using information in function metadata's 'args' property, parse command line
 arguments '@argv' into hash '%args', suitable for passing into subs.
 
@@ -582,13 +579,11 @@ other reasons, we want to be able to parse complex types.
 This function exists mostly to support command-line options parsing for
 Perinci::CmdLine. See its documentation, on the section of command-line
 options/argument parsing.
-}
 
 =item * B<extra_getopts_after> => I<array>
 
-{en_US Get subroutine arguments (%args) from command-line arguments (@ARGV)}.
+Get subroutine arguments (%args) from command-line arguments (@ARGV).
 
-{en_US 
 Using information in function metadata's 'args' property, parse command line
 arguments '@argv' into hash '%args', suitable for passing into subs.
 
@@ -602,13 +597,11 @@ other reasons, we want to be able to parse complex types.
 This function exists mostly to support command-line options parsing for
 Perinci::CmdLine. See its documentation, on the section of command-line
 options/argument parsing.
-}
 
 =item * B<extra_getopts_before> => I<array>
 
-{en_US Get subroutine arguments (%args) from command-line arguments (@ARGV)}.
+Get subroutine arguments (%args) from command-line arguments (@ARGV).
 
-{en_US 
 Using information in function metadata's 'args' property, parse command line
 arguments '@argv' into hash '%args', suitable for passing into subs.
 
@@ -622,13 +615,11 @@ other reasons, we want to be able to parse complex types.
 This function exists mostly to support command-line options parsing for
 Perinci::CmdLine. See its documentation, on the section of command-line
 options/argument parsing.
-}
 
 =item * B<meta>* => I<hash>
 
-{en_US Get subroutine arguments (%args) from command-line arguments (@ARGV)}.
+Get subroutine arguments (%args) from command-line arguments (@ARGV).
 
-{en_US 
 Using information in function metadata's 'args' property, parse command line
 arguments '@argv' into hash '%args', suitable for passing into subs.
 
@@ -642,13 +633,11 @@ other reasons, we want to be able to parse complex types.
 This function exists mostly to support command-line options parsing for
 Perinci::CmdLine. See its documentation, on the section of command-line
 options/argument parsing.
-}
 
 =item * B<on_missing_required_args> => I<code>
 
-{en_US Get subroutine arguments (%args) from command-line arguments (@ARGV)}.
+Get subroutine arguments (%args) from command-line arguments (@ARGV).
 
-{en_US 
 Using information in function metadata's 'args' property, parse command line
 arguments '@argv' into hash '%args', suitable for passing into subs.
 
@@ -662,13 +651,11 @@ other reasons, we want to be able to parse complex types.
 This function exists mostly to support command-line options parsing for
 Perinci::CmdLine. See its documentation, on the section of command-line
 options/argument parsing.
-}
 
 =item * B<per_arg_json> => I<bool> (default: 0)
 
-{en_US Get subroutine arguments (%args) from command-line arguments (@ARGV)}.
+Get subroutine arguments (%args) from command-line arguments (@ARGV).
 
-{en_US 
 Using information in function metadata's 'args' property, parse command line
 arguments '@argv' into hash '%args', suitable for passing into subs.
 
@@ -682,13 +669,11 @@ other reasons, we want to be able to parse complex types.
 This function exists mostly to support command-line options parsing for
 Perinci::CmdLine. See its documentation, on the section of command-line
 options/argument parsing.
-}
 
 =item * B<per_arg_yaml> => I<bool> (default: 0)
 
-{en_US Get subroutine arguments (%args) from command-line arguments (@ARGV)}.
+Get subroutine arguments (%args) from command-line arguments (@ARGV).
 
-{en_US 
 Using information in function metadata's 'args' property, parse command line
 arguments '@argv' into hash '%args', suitable for passing into subs.
 
@@ -702,13 +687,11 @@ other reasons, we want to be able to parse complex types.
 This function exists mostly to support command-line options parsing for
 Perinci::CmdLine. See its documentation, on the section of command-line
 options/argument parsing.
-}
 
 =item * B<strict> => I<bool> (default: 1)
 
-{en_US Get subroutine arguments (%args) from command-line arguments (@ARGV)}.
+Get subroutine arguments (%args) from command-line arguments (@ARGV).
 
-{en_US 
 Using information in function metadata's 'args' property, parse command line
 arguments '@argv' into hash '%args', suitable for passing into subs.
 
@@ -722,7 +705,6 @@ other reasons, we want to be able to parse complex types.
 This function exists mostly to support command-line options parsing for
 Perinci::CmdLine. See its documentation, on the section of command-line
 options/argument parsing.
-}
 
 =back
 
@@ -758,7 +740,7 @@ Steven Haryanto <stevenharyanto@gmail.com>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2013 by Steven Haryanto.
+This software is copyright (c) 2014 by Steven Haryanto.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

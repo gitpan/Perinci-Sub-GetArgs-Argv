@@ -325,6 +325,11 @@ $meta = {
     },
 };
 test_getargs(meta=>$meta, argv=>[qw//],
+             args=>{},
+             on_missing_required_args => sub {1},
+             name=>"returning 1 from on_missing_required_args hook = no err");
+
+test_getargs(meta=>$meta, argv=>[qw//],
              args=>{a=>'v1'},
              on_missing_required_args => sub {
                  my %args = @_;
@@ -337,6 +342,7 @@ test_getargs(meta=>$meta, argv=>[qw//],
                  } else {
                      $args->{$arg} = 'v2';
                  }
+                 0;
              },
              name=>"arg values set by on_missing_required_args hook");
 

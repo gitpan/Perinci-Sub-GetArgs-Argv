@@ -3,7 +3,7 @@ NAME
     arguments (@ARGV)
 
 VERSION
-    version 0.30
+    version 0.31
 
 SYNOPSIS
      use Perinci::Sub::GetArgs::Argv;
@@ -22,12 +22,11 @@ DESCRIPTION
 
 FUNCTIONS
   get_args_from_argv(%args) -> [status, msg, result, meta]
-    {en_US Get subroutine arguments (%args) from command-line arguments
-    (@ARGV)}.
+    Get subroutine arguments (%args) from command-line arguments (@ARGV).
 
-    {en_US Using information in function metadata's 'args' property, parse
-    command line arguments '@argv' into hash '%args', suitable for passing
-    into subs.
+    Using information in function metadata's 'args' property, parse command
+    line arguments '@argv' into hash '%args', suitable for passing into
+    subs.
 
     Currently uses Getopt::Long's GetOptions to do the parsing.
 
@@ -38,17 +37,17 @@ FUNCTIONS
 
     This function exists mostly to support command-line options parsing for
     Perinci::CmdLine. See its documentation, on the section of command-line
-    options/argument parsing. }
+    options/argument parsing.
 
     Arguments ('*' denotes required arguments):
 
     *   allow_extra_elems => *bool* (default: 0)
 
-        {en_US Get subroutine arguments (%args) from command-line arguments
-        (@ARGV)}.
+        Get subroutine arguments (%args) from command-line arguments
+        (@ARGV).
 
-        {en_US Using information in function metadata's 'args' property,
-        parse command line arguments '@argv' into hash '%args', suitable for
+        Using information in function metadata's 'args' property, parse
+        command line arguments '@argv' into hash '%args', suitable for
         passing into subs.
 
         Currently uses Getopt::Long's GetOptions to do the parsing.
@@ -61,15 +60,15 @@ FUNCTIONS
 
         This function exists mostly to support command-line options parsing
         for Perinci::CmdLine. See its documentation, on the section of
-        command-line options/argument parsing. }
+        command-line options/argument parsing.
 
     *   argv => *array*
 
-        {en_US Get subroutine arguments (%args) from command-line arguments
-        (@ARGV)}.
+        Get subroutine arguments (%args) from command-line arguments
+        (@ARGV).
 
-        {en_US Using information in function metadata's 'args' property,
-        parse command line arguments '@argv' into hash '%args', suitable for
+        Using information in function metadata's 'args' property, parse
+        command line arguments '@argv' into hash '%args', suitable for
         passing into subs.
 
         Currently uses Getopt::Long's GetOptions to do the parsing.
@@ -82,15 +81,15 @@ FUNCTIONS
 
         This function exists mostly to support command-line options parsing
         for Perinci::CmdLine. See its documentation, on the section of
-        command-line options/argument parsing. }
+        command-line options/argument parsing.
 
     *   check_required_args => *bool* (default: 1)
 
-        {en_US Get subroutine arguments (%args) from command-line arguments
-        (@ARGV)}.
+        Get subroutine arguments (%args) from command-line arguments
+        (@ARGV).
 
-        {en_US Using information in function metadata's 'args' property,
-        parse command line arguments '@argv' into hash '%args', suitable for
+        Using information in function metadata's 'args' property, parse
+        command line arguments '@argv' into hash '%args', suitable for
         passing into subs.
 
         Currently uses Getopt::Long's GetOptions to do the parsing.
@@ -103,15 +102,15 @@ FUNCTIONS
 
         This function exists mostly to support command-line options parsing
         for Perinci::CmdLine. See its documentation, on the section of
-        command-line options/argument parsing. }
+        command-line options/argument parsing.
 
     *   extra_getopts_after => *array*
 
-        {en_US Get subroutine arguments (%args) from command-line arguments
-        (@ARGV)}.
+        Get subroutine arguments (%args) from command-line arguments
+        (@ARGV).
 
-        {en_US Using information in function metadata's 'args' property,
-        parse command line arguments '@argv' into hash '%args', suitable for
+        Using information in function metadata's 'args' property, parse
+        command line arguments '@argv' into hash '%args', suitable for
         passing into subs.
 
         Currently uses Getopt::Long's GetOptions to do the parsing.
@@ -124,15 +123,15 @@ FUNCTIONS
 
         This function exists mostly to support command-line options parsing
         for Perinci::CmdLine. See its documentation, on the section of
-        command-line options/argument parsing. }
+        command-line options/argument parsing.
 
     *   extra_getopts_before => *array*
 
-        {en_US Get subroutine arguments (%args) from command-line arguments
-        (@ARGV)}.
+        Get subroutine arguments (%args) from command-line arguments
+        (@ARGV).
 
-        {en_US Using information in function metadata's 'args' property,
-        parse command line arguments '@argv' into hash '%args', suitable for
+        Using information in function metadata's 'args' property, parse
+        command line arguments '@argv' into hash '%args', suitable for
         passing into subs.
 
         Currently uses Getopt::Long's GetOptions to do the parsing.
@@ -145,15 +144,15 @@ FUNCTIONS
 
         This function exists mostly to support command-line options parsing
         for Perinci::CmdLine. See its documentation, on the section of
-        command-line options/argument parsing. }
+        command-line options/argument parsing.
 
     *   meta* => *hash*
 
-        {en_US Get subroutine arguments (%args) from command-line arguments
-        (@ARGV)}.
+        Get subroutine arguments (%args) from command-line arguments
+        (@ARGV).
 
-        {en_US Using information in function metadata's 'args' property,
-        parse command line arguments '@argv' into hash '%args', suitable for
+        Using information in function metadata's 'args' property, parse
+        command line arguments '@argv' into hash '%args', suitable for
         passing into subs.
 
         Currently uses Getopt::Long's GetOptions to do the parsing.
@@ -166,15 +165,15 @@ FUNCTIONS
 
         This function exists mostly to support command-line options parsing
         for Perinci::CmdLine. See its documentation, on the section of
-        command-line options/argument parsing. }
+        command-line options/argument parsing.
 
     *   on_missing_required_args => *code*
 
-        {en_US Get subroutine arguments (%args) from command-line arguments
-        (@ARGV)}.
+        Get subroutine arguments (%args) from command-line arguments
+        (@ARGV).
 
-        {en_US Using information in function metadata's 'args' property,
-        parse command line arguments '@argv' into hash '%args', suitable for
+        Using information in function metadata's 'args' property, parse
+        command line arguments '@argv' into hash '%args', suitable for
         passing into subs.
 
         Currently uses Getopt::Long's GetOptions to do the parsing.
@@ -187,15 +186,15 @@ FUNCTIONS
 
         This function exists mostly to support command-line options parsing
         for Perinci::CmdLine. See its documentation, on the section of
-        command-line options/argument parsing. }
+        command-line options/argument parsing.
 
     *   per_arg_json => *bool* (default: 0)
 
-        {en_US Get subroutine arguments (%args) from command-line arguments
-        (@ARGV)}.
+        Get subroutine arguments (%args) from command-line arguments
+        (@ARGV).
 
-        {en_US Using information in function metadata's 'args' property,
-        parse command line arguments '@argv' into hash '%args', suitable for
+        Using information in function metadata's 'args' property, parse
+        command line arguments '@argv' into hash '%args', suitable for
         passing into subs.
 
         Currently uses Getopt::Long's GetOptions to do the parsing.
@@ -208,15 +207,15 @@ FUNCTIONS
 
         This function exists mostly to support command-line options parsing
         for Perinci::CmdLine. See its documentation, on the section of
-        command-line options/argument parsing. }
+        command-line options/argument parsing.
 
     *   per_arg_yaml => *bool* (default: 0)
 
-        {en_US Get subroutine arguments (%args) from command-line arguments
-        (@ARGV)}.
+        Get subroutine arguments (%args) from command-line arguments
+        (@ARGV).
 
-        {en_US Using information in function metadata's 'args' property,
-        parse command line arguments '@argv' into hash '%args', suitable for
+        Using information in function metadata's 'args' property, parse
+        command line arguments '@argv' into hash '%args', suitable for
         passing into subs.
 
         Currently uses Getopt::Long's GetOptions to do the parsing.
@@ -229,15 +228,15 @@ FUNCTIONS
 
         This function exists mostly to support command-line options parsing
         for Perinci::CmdLine. See its documentation, on the section of
-        command-line options/argument parsing. }
+        command-line options/argument parsing.
 
     *   strict => *bool* (default: 1)
 
-        {en_US Get subroutine arguments (%args) from command-line arguments
-        (@ARGV)}.
+        Get subroutine arguments (%args) from command-line arguments
+        (@ARGV).
 
-        {en_US Using information in function metadata's 'args' property,
-        parse command line arguments '@argv' into hash '%args', suitable for
+        Using information in function metadata's 'args' property, parse
+        command line arguments '@argv' into hash '%args', suitable for
         passing into subs.
 
         Currently uses Getopt::Long's GetOptions to do the parsing.
@@ -250,7 +249,7 @@ FUNCTIONS
 
         This function exists mostly to support command-line options parsing
         for Perinci::CmdLine. See its documentation, on the section of
-        command-line options/argument parsing. }
+        command-line options/argument parsing.
 
     Return value:
 
@@ -285,7 +284,7 @@ AUTHOR
     Steven Haryanto <stevenharyanto@gmail.com>
 
 COPYRIGHT AND LICENSE
-    This software is copyright (c) 2013 by Steven Haryanto.
+    This software is copyright (c) 2014 by Steven Haryanto.
 
     This is free software; you can redistribute it and/or modify it under
     the same terms as the Perl 5 programming language system itself.
