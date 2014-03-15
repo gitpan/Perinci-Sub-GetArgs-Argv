@@ -14,7 +14,7 @@ use Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(get_args_from_argv);
 
-our $VERSION = '0.31'; # VERSION
+our $VERSION = '0.32'; # VERSION
 
 our %SPEC;
 
@@ -482,7 +482,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-version 0.31
+version 0.32
 
 =head1 SYNOPSIS
 
@@ -528,183 +528,101 @@ Arguments ('*' denotes required arguments):
 
 =item * B<allow_extra_elems> => I<bool> (default: 0)
 
-Get subroutine arguments (%args) from command-line arguments (@ARGV).
+Allow extra/unassigned elements in argv.
 
-Using information in function metadata's 'args' property, parse command line
-arguments '@argv' into hash '%args', suitable for passing into subs.
+If set to 1, then if there are array elements unassigned to one of the
+arguments, instead of generating an error, the function will just ignore them.
 
-Currently uses Getopt::Long's GetOptions to do the parsing.
-
-As with GetOptions, this function modifies its 'argv' argument.
-
-Why would one use this function instead of using Getopt::Long directly? Among
-other reasons, we want to be able to parse complex types.
-
-This function exists mostly to support command-line options parsing for
-Perinci::CmdLine. See its documentation, on the section of command-line
-options/argument parsing.
+This option will be passed to Perinci::Sub::GetArgs::Array's allowI<extra>elems.
 
 =item * B<argv> => I<array>
 
-Get subroutine arguments (%args) from command-line arguments (@ARGV).
-
-Using information in function metadata's 'args' property, parse command line
-arguments '@argv' into hash '%args', suitable for passing into subs.
-
-Currently uses Getopt::Long's GetOptions to do the parsing.
-
-As with GetOptions, this function modifies its 'argv' argument.
-
-Why would one use this function instead of using Getopt::Long directly? Among
-other reasons, we want to be able to parse complex types.
-
-This function exists mostly to support command-line options parsing for
-Perinci::CmdLine. See its documentation, on the section of command-line
-options/argument parsing.
+If not specified, defaults to @ARGV
 
 =item * B<check_required_args> => I<bool> (default: 1)
 
-Get subroutine arguments (%args) from command-line arguments (@ARGV).
+Whether to check required arguments.
 
-Using information in function metadata's 'args' property, parse command line
-arguments '@argv' into hash '%args', suitable for passing into subs.
-
-Currently uses Getopt::Long's GetOptions to do the parsing.
-
-As with GetOptions, this function modifies its 'argv' argument.
-
-Why would one use this function instead of using Getopt::Long directly? Among
-other reasons, we want to be able to parse complex types.
-
-This function exists mostly to support command-line options parsing for
-Perinci::CmdLine. See its documentation, on the section of command-line
-options/argument parsing.
+If set to true, will check that required arguments (those with req=>1) have been
+specified. Normally you want this, but Perinci::CmdLine turns this off so users
+can run --help even when arguments are incomplete.
 
 =item * B<extra_getopts_after> => I<array>
 
-Get subroutine arguments (%args) from command-line arguments (@ARGV).
+Specify extra Getopt::Long specification.
 
-Using information in function metadata's 'args' property, parse command line
-arguments '@argv' into hash '%args', suitable for passing into subs.
-
-Currently uses Getopt::Long's GetOptions to do the parsing.
-
-As with GetOptions, this function modifies its 'argv' argument.
-
-Why would one use this function instead of using Getopt::Long directly? Among
-other reasons, we want to be able to parse complex types.
-
-This function exists mostly to support command-line options parsing for
-Perinci::CmdLine. See its documentation, on the section of command-line
-options/argument parsing.
+Just like I<extra_getopts_before>, but the extra specification is put I<after>
+function arguments specification so extra options can override function
+arguments.
 
 =item * B<extra_getopts_before> => I<array>
 
-Get subroutine arguments (%args) from command-line arguments (@ARGV).
+Specify extra Getopt::Long specification.
 
-Using information in function metadata's 'args' property, parse command line
-arguments '@argv' into hash '%args', suitable for passing into subs.
+If specified, insert extra Getopt::Long specification. This is used, for
+example, by Perinci::CmdLine::run() to add general options --help, --version,
+--list, etc so it can mixed with spec arg options, for convenience.
 
-Currently uses Getopt::Long's GetOptions to do the parsing.
-
-As with GetOptions, this function modifies its 'argv' argument.
-
-Why would one use this function instead of using Getopt::Long directly? Among
-other reasons, we want to be able to parse complex types.
-
-This function exists mostly to support command-line options parsing for
-Perinci::CmdLine. See its documentation, on the section of command-line
-options/argument parsing.
+Since the extra specification is put at the front (before function arguments
+specification), the extra options will not be able to override function
+arguments (this is how Getopt::Long works). For example, if extra specification
+contains --help, and one of function arguments happens to be 'help', the extra
+specification won't have any effect.
 
 =item * B<meta>* => I<hash>
 
-Get subroutine arguments (%args) from command-line arguments (@ARGV).
-
-Using information in function metadata's 'args' property, parse command line
-arguments '@argv' into hash '%args', suitable for passing into subs.
-
-Currently uses Getopt::Long's GetOptions to do the parsing.
-
-As with GetOptions, this function modifies its 'argv' argument.
-
-Why would one use this function instead of using Getopt::Long directly? Among
-other reasons, we want to be able to parse complex types.
-
-This function exists mostly to support command-line options parsing for
-Perinci::CmdLine. See its documentation, on the section of command-line
-options/argument parsing.
-
 =item * B<on_missing_required_args> => I<code>
 
-Get subroutine arguments (%args) from command-line arguments (@ARGV).
+Execute code when there is missing required args.
 
-Using information in function metadata's 'args' property, parse command line
-arguments '@argv' into hash '%args', suitable for passing into subs.
+This can be used to give a chance to supply argument value from other sources if
+not specified by command-line options. Perinci::CmdLine, for example, uses this
+hook to supply value from STDIN or file contents (if argument has C<cmdline_src>
+specification key set).
 
-Currently uses Getopt::Long's GetOptions to do the parsing.
+This hook will be called for each missing argument. It will be supplied hash
+arguments: (arg => $theI<missing>argumentI<name, args =>
+$the>resultingI<args>soI<far, spec => $the>arg_spec).
 
-As with GetOptions, this function modifies its 'argv' argument.
-
-Why would one use this function instead of using Getopt::Long directly? Among
-other reasons, we want to be able to parse complex types.
-
-This function exists mostly to support command-line options parsing for
-Perinci::CmdLine. See its documentation, on the section of command-line
-options/argument parsing.
+The hook can return true if it succeeds in making the missing situation
+resolved. In this case, the function won't complain about missing argument for
+the corresponding argument.
 
 =item * B<per_arg_json> => I<bool> (default: 0)
 
-Get subroutine arguments (%args) from command-line arguments (@ARGV).
+Whether to recognize --ARGNAME-json.
 
-Using information in function metadata's 'args' property, parse command line
-arguments '@argv' into hash '%args', suitable for passing into subs.
+This is useful for example if you want to specify a value which is not
+expressible from the command-line, like 'undef'.
 
-Currently uses Getopt::Long's GetOptions to do the parsing.
+    % script.pl --name-json 'null'
 
-As with GetOptions, this function modifies its 'argv' argument.
+But every other string will need to be quoted:
 
-Why would one use this function instead of using Getopt::Long directly? Among
-other reasons, we want to be able to parse complex types.
+    % script.pl --name-json '"foo"'
 
-This function exists mostly to support command-line options parsing for
-Perinci::CmdLine. See its documentation, on the section of command-line
-options/argument parsing.
+See also: perI<arg>yaml. You should enable just one instead of turning on both.
 
 =item * B<per_arg_yaml> => I<bool> (default: 0)
 
-Get subroutine arguments (%args) from command-line arguments (@ARGV).
+Whether to recognize --ARGNAME-yaml.
 
-Using information in function metadata's 'args' property, parse command line
-arguments '@argv' into hash '%args', suitable for passing into subs.
+This is useful for example if you want to specify a value which is not
+expressible from the command-line, like 'undef'.
 
-Currently uses Getopt::Long's GetOptions to do the parsing.
+    % script.pl --name-yaml '~'
 
-As with GetOptions, this function modifies its 'argv' argument.
-
-Why would one use this function instead of using Getopt::Long directly? Among
-other reasons, we want to be able to parse complex types.
-
-This function exists mostly to support command-line options parsing for
-Perinci::CmdLine. See its documentation, on the section of command-line
-options/argument parsing.
+See also: perI<arg>json. You should enable just one instead of turning on both.
 
 =item * B<strict> => I<bool> (default: 1)
 
-Get subroutine arguments (%args) from command-line arguments (@ARGV).
+Strict mode.
 
-Using information in function metadata's 'args' property, parse command line
-arguments '@argv' into hash '%args', suitable for passing into subs.
+If set to 0, will still return parsed argv even if there are parsing errors. If
+set to 1 (the default), will die upon error.
 
-Currently uses Getopt::Long's GetOptions to do the parsing.
-
-As with GetOptions, this function modifies its 'argv' argument.
-
-Why would one use this function instead of using Getopt::Long directly? Among
-other reasons, we want to be able to parse complex types.
-
-This function exists mostly to support command-line options parsing for
-Perinci::CmdLine. See its documentation, on the section of command-line
-options/argument parsing.
+Normally you would want to use strict mode, for more error checking. Setting off
+strict is used by, for example, Perinci::Sub::Complete.
 
 =back
 

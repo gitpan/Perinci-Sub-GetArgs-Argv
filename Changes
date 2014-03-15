@@ -1,5 +1,11 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.32     2014-03-15 (SHARYANTO)
+
+         - No functional changes. Rebuild to fix POD documentation (function
+           argument documentation was broken in Perinci-To-POD < 0.42).
+
+
 0.31     2014-01-21 (SHARYANTO)
 
          [INCOMPATIBLE CHANGES]

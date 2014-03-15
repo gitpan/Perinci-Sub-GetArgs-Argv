@@ -3,7 +3,8 @@
 use 5.010;
 use strict;
 use warnings;
-use Log::Any '$log';
+#use Log::Any '$log';
+
 use Test::More 0.98;
 
 use Data::Clone qw(clone);
@@ -324,6 +325,9 @@ $meta = {
         b => {schema=>'str*'},
     },
 };
+test_getargs(meta=>$meta, argv=>[qw//],
+             error=>1,
+             name=>"without on_missing_required_args hook, err");
 test_getargs(meta=>$meta, argv=>[qw//],
              args=>{},
              on_missing_required_args => sub {1},
