@@ -5,8 +5,8 @@ use strict;
 use warnings;
 use Log::Any '$log';
 
-use Data::Clone;
 use Data::Sah;
+use Function::Fallback::CoreOrPP qw(clone);
 use Perinci::Sub::GetArgs::Array qw(get_args_from_array);
 use Perinci::Sub::Util qw(err);
 
@@ -14,7 +14,7 @@ use Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(get_args_from_argv);
 
-our $VERSION = '0.32'; # VERSION
+our $VERSION = '0.33'; # VERSION
 
 our %SPEC;
 
@@ -205,8 +205,6 @@ _
     },
 };
 sub get_args_from_argv {
-    # we are trying to shave off startup overhead, so only load modules when
-    # about to be used
     require Getopt::Long;
 
     my %input_args = @_;
@@ -482,7 +480,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-version 0.32
+version 0.33
 
 =head1 SYNOPSIS
 
@@ -628,7 +626,14 @@ strict is used by, for example, Perinci::Sub::Complete.
 
 Return value:
 
-Returns an enveloped result (an array). First element (status) is an integer containing HTTP status code (200 means OK, 4xx caller error, 5xx function error). Second element (msg) is a string containing error message, or 'OK' if status is 200. Third element (result) is optional, the actual result. Fourth element (meta) is called result metadata and is optional, a hash that contains extra information.
+Returns an enveloped result (an array).
+
+First element (status) is an integer containing HTTP status code
+(200 means OK, 4xx caller error, 5xx function error). Second element
+(msg) is a string containing error message, or 'OK' if status is
+200. Third element (result) is optional, the actual result. Fourth
+element (meta) is called result metadata and is optional, a hash
+that contains extra information.
 
 =head1 FAQ
 
