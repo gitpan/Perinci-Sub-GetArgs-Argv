@@ -32,7 +32,7 @@ resources:
   bugtracker: https://rt.cpan.org/Public/Dist/Display.html?Name=Perinci-Sub-GetArgs-Argv
   homepage: https://metacpan.org/release/Perinci-Sub-GetArgs-Argv
   repository: git://github.com/sharyanto/perl-Perinci-Sub-GetArgs-Argv.git
-version: '0.33'
+version: '0.34'
 x_Dist_Zilla:
   perl:
     version: '5.018002'
@@ -236,7 +236,7 @@ x_Dist_Zilla:
           script_finder:
             - ':ExecFiles'
       name: '@Author::SHARYANTO/Test::Compile'
-      version: '2.039'
+      version: '2.040'
     -
       class: Dist::Zilla::Plugin::Test::Rinci
       name: '@Author::SHARYANTO/Test::Rinci'

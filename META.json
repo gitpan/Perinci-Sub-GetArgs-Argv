@@ -63,7 +63,7 @@
          "web" : "https://github.com/sharyanto/perl-Perinci-Sub-GetArgs-Argv"
       }
    },
-   "version" : "0.33",
+   "version" : "0.34",
    "x_Dist_Zilla" : {
       "perl" : {
          "version" : "5.018002"
@@ -323,7 +323,7 @@
                }
             },
             "name" : "@Author::SHARYANTO/Test::Compile",
-            "version" : "2.039"
+            "version" : "2.040"
          },
          {
             "class" : "Dist::Zilla::Plugin::Test::Rinci",

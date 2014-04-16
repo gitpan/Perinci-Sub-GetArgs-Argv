@@ -391,6 +391,34 @@ test_getargs(meta=>$meta, argv=>[qw/-X=foo/],
     );
 }
 
+{
+    my $meta = {
+        v => 1.1,
+        args => {
+            arg1 => {
+                schema => 'str',
+                cmdline_aliases => {
+                    al1 => {
+                        code => 'CODE',
+                    },
+                },
+            },
+        },
+    };
+    test_getargs(
+        name => 'error 502 (1)',
+        meta => $meta,
+        argv => [qw/--arg1 val/],
+        args => {arg1=>'val'},
+    );
+    test_getargs(
+        name   => 'error 502 (2)',
+        meta   => $meta,
+        argv   => [qw/--al1 val/],
+        status => 502,
+    );
+}
+
 DONE_TESTING:
 done_testing();
 
@@ -410,6 +438,11 @@ sub test_getargs {
             $input_args{$_} = $args{$_} if defined $args{$_};
         }
         $res = get_args_from_argv(%input_args);
+        if ($args{status}) {
+            is($res->[0], $args{status}, "status")
+                or diag explain $res;
+            return if $args{status} != 200;
+        }
         if ($args{error}) {
             isnt($res->[0], 200, "error (status != 200)");
         } else {

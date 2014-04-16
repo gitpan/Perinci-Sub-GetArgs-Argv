@@ -14,7 +14,7 @@ use Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(get_args_from_argv);
 
-our $VERSION = '0.33'; # VERSION
+our $VERSION = '0.34'; # VERSION
 
 our %SPEC;
 
@@ -203,6 +203,19 @@ the corresponding argument.
 _
         },
     },
+    result => {
+        description => <<'_',
+
+Error codes:
+
+* 500 - failure in GetOptions, meaning argv is not valid according to metadata
+  specification.
+
+* 502 - coderef in cmdline_aliases got converted into a string, probably because
+  the metadata was transported (e.g. through Riap::HTTP/Riap::Simple).
+
+_
+    },
 };
 sub get_args_from_argv {
     require Getopt::Long;
@@ -230,7 +243,8 @@ sub get_args_from_argv {
 
     # 1. first we form Getopt::Long spec
 
-    while (my ($a, $as) = each %$args_p) {
+    for my $a (keys %$args_p) {
+        my $as = $args_p->{$a};
         $as->{schema} = Data::Sah::normalize_schema($as->{schema} // 'any');
         # XXX normalization of 'of' clause should've been handled by sah itself
         if ($as->{schema}[0] eq 'array' && $as->{schema}[1]{of}) {
@@ -338,7 +352,8 @@ sub get_args_from_argv {
 
             # parse argv_aliases
             if ($as->{cmdline_aliases}) {
-                while (my ($al, $alspec) = each %{$as->{cmdline_aliases}}) {
+                for my $al (keys %{$as->{cmdline_aliases}}) {
+                    my $alspec = $as->{cmdline_aliases}{$al};
                     my $type =
                         $alspec->{schema} ? $alspec->{schema}[0] :
                             $as->{schema} ? $as->{schema}[0] : '';
@@ -351,6 +366,18 @@ sub get_args_from_argv {
                     }
 
                     if ($alspec->{code}) {
+                        if ($alspec->{code} eq 'CODE') {
+                            if (grep {/\A--\Q$al\E(-yaml|-json)?(=|\z)/}
+                                    @$argv) {
+                                return [
+                                    502,
+                                    join("",
+                                         "Code in cmdline_aliases for arg $a ",
+                                         "got converted into string, probably ",
+                                         "because of JSON transport"),
+                                ];
+                            }
+                        }
                         push @go_spec,
                             $go_opt=>sub {$alspec->{code}->($args, $_[1])};
                     } else {
@@ -445,7 +472,8 @@ sub get_args_from_argv {
     # 4. check required args
 
     my $missing_arg;
-    while (my ($a, $as) = each %$args_p) {
+    for my $a (keys %$args_p) {
+        my $as = $args_p->{$a};
         if (!exists($args->{$a})) {
             next unless $as->{req};
             # give a chance to hook to set missing arg
@@ -480,7 +508,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-version 0.33
+version 0.34
 
 =head1 SYNOPSIS
 

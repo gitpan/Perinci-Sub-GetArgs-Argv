@@ -1,5 +1,16 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.34     2014-04-16 (SHARYANTO)
+
+         - Return status 502 when encountering a cmdline_alias where its code
+           has been converted into 'CODE'. This will allow modules like
+           Perinci::CmdLine or App::riap to retry sending argv to the server
+           instead of parsing argv on the client side.
+
+         - Replace each() with for() [ref:
+           http://blogs.perl.org/users/rurban/2014/04/do-not-use-each.html].
+
+
 0.33     2014-04-10 (SHARYANTO)
 
          - No functional changes.
