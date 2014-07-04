@@ -14,7 +14,7 @@ use Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(get_args_from_argv);
 
-our $VERSION = '0.34'; # VERSION
+our $VERSION = '0.35'; # VERSION
 
 our %SPEC;
 
@@ -322,6 +322,7 @@ sub get_args_from_argv {
                 if ($val_set && $as->{cmdline_on_getopt}) {
                     $as->{cmdline_on_getopt}->(
                         arg=>$name, value=>$val, args=>$args,
+                        opt=>$_[0]{ctl}[1], # option name
                     );
                 }
             };
@@ -465,6 +466,20 @@ sub get_args_from_argv {
                     }
                 }
                 $args->{$name} = $val;
+                # we still call cmdline_on_getopt for this
+                if ($as->{cmdline_on_getopt}) {
+                    if ($as->{greedy}) {
+                        $as->{cmdline_on_getopt}->(
+                            arg=>$name, value=>$_, args=>$args,
+                            opt=>undef, # this marks that value is retrieved from cmdline arg
+                        ) for @$val;
+                    } else {
+                        $as->{cmdline_on_getopt}->(
+                            arg=>$name, value=>$val, args=>$args,
+                            opt=>undef, # this marks that value is retrieved from cmdline arg
+                        );
+                    }
+                }
             }
         }
     }
@@ -508,7 +523,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-version 0.34
+This document describes version 0.35 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-07-04.
 
 =head1 SYNOPSIS
 

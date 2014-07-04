@@ -1,5 +1,19 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.35     2014-07-04 (SHARYANTO)
+
+         - Still call cmdline_on_getopt routine when value for function argument
+           is specified through command-line argument instead of command-line
+           options. This is usually desired to catch all command-line
+           options/arguments.
+
+         - Provide 'opt' for cmdline_on_getopt routine to let it know whether it
+           is specified as an option (where 'opt' will contain the option name,
+           e.g. '--foo 1' will have 'opt' set to 'foo') or whether it is
+           specified in the command-line argument (where 'opt' will be set to
+           undef).
+
+
 0.34     2014-04-16 (SHARYANTO)
 
          - Return status 502 when encountering a cmdline_alias where its code

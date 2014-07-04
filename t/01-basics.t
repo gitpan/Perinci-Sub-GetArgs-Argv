@@ -363,7 +363,8 @@ test_getargs(meta=>$meta, argv=>[qw/-X=foo/],
              name=>"Go::L configuration: bundling");
 
 {
-    my @x;
+    my @arg;
+    my @pos;
     my $meta = {
         v => 1.1,
         args => {
@@ -371,22 +372,84 @@ test_getargs(meta=>$meta, argv=>[qw/-X=foo/],
                 schema => ['array*' => of => 'str*'],
                 cmdline_aliases   => { A => {} },
                 cmdline_on_getopt => sub {
-                    push @x, {@_};
+                    push @arg, {@_};
                 },
             },
             foo => { schema => 'bool' },
+            pos => {
+                schema => ['array*' => of => 'str*'],
+                pos    => 0,
+                greedy => 1,
+                cmdline_on_getopt => sub {
+                    push @pos, {@_};
+                },
+            },
         },
     };
     test_getargs(
-        name => 'cmdline_on_getopt',
+        name => 'cmdline_on_getopt (basics)',
         meta => $meta,
         argv => [qw/--arg 1 --foo -A 2/],
         posttest => sub {
             my $res = shift;
-            is_deeply(\@x, [
-                {arg=>'arg', args=>$res->[2], value=>1},
-                {arg=>'arg', args=>$res->[2], value=>2},
-            ]) or diag explain \@x;
+            is_deeply(\@arg, [
+                {arg=>'arg', args=>$res->[2], opt=>'arg', value=>1},
+                {arg=>'arg', args=>$res->[2], opt=>'A'  , value=>2},
+            ]) or diag explain \@arg;
+        },
+    );
+    @pos = ();
+    test_getargs(
+        name => 'cmdline_on_getopt for arg with pos, feed opts',
+        meta => $meta,
+        argv => [qw/--pos 1/],
+        posttest => sub {
+            my $res = shift;
+            is_deeply(\@pos, [
+                {arg=>'pos', args=>$res->[2], opt=>'pos', value=>1},
+            ]) or diag explain \@pos;
+        },
+    );
+    @pos = ();
+    test_getargs(
+        name => 'cmdline_on_getopt for arg with pos, feed arg',
+        meta => $meta,
+        argv => [qw/1/],
+        posttest => sub {
+            my $res = shift;
+            is_deeply(\@pos, [
+                {arg=>'pos', args=>$res->[2], opt=>undef, value=>1},
+            ]) or diag explain \@pos;
+        },
+    );
+
+    # from now on, pos becomes greedy
+    $meta->{args}{pos}{greedy} = 1;
+
+    @pos = ();
+    test_getargs(
+        name => 'cmdline_on_getopt for arg with pos + greedy, feed opts',
+        meta => $meta,
+        argv => [qw/--pos 1 --pos 2/],
+        posttest => sub {
+            my $res = shift;
+            is_deeply(\@pos, [
+                {arg=>'pos', args=>$res->[2], opt=>'pos', value=>1},
+                {arg=>'pos', args=>$res->[2], opt=>'pos', value=>2},
+            ]) or diag explain \@pos;
+        },
+    );
+    @pos = ();
+    test_getargs(
+        name => 'cmdline_on_getopt for arg with pos + greedy, feed args',
+        meta => $meta,
+        argv => [qw/1 2/],
+        posttest => sub {
+            my $res = shift;
+            is_deeply(\@pos, [
+                {arg=>'pos', args=>$res->[2], opt=>undef, value=>1},
+                {arg=>'pos', args=>$res->[2], opt=>undef, value=>2},
+            ]) or diag explain \@pos;
         },
     );
 }
