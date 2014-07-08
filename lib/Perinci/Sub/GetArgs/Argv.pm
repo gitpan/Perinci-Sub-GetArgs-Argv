@@ -3,10 +3,9 @@ package Perinci::Sub::GetArgs::Argv;
 use 5.010001;
 use strict;
 use warnings;
-use Log::Any '$log';
+#use Log::Any '$log';
 
-use Data::Sah;
-use Function::Fallback::CoreOrPP qw(clone);
+use Data::Sah::Normalize qw(normalize_schema);
 use Perinci::Sub::GetArgs::Array qw(get_args_from_array);
 use Perinci::Sub::Util qw(err);
 
@@ -14,7 +13,8 @@ use Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(get_args_from_argv);
 
-our $VERSION = '0.35'; # VERSION
+our $DATE = '2014-07-08'; # DATE
+our $VERSION = '0.36'; # VERSION
 
 our %SPEC;
 
@@ -40,6 +40,90 @@ sub _parse_json {
     eval { $res = $json->decode($str); $cleanser->clean_in_place($res) };
     my $e = $@;
     return (!$e, $e, $res);
+}
+
+if(0) {$SPEC{gen_go_specs_from_meta} = {
+    v           => 1.1,
+    summary     => 'Generate Getopt::Long spec from function metadata',
+    description => <<'_',
+
+Function arguments will be mapped to command-line options with the same name,
+with non-alphanumeric characters changed to `-` (`-` is preferred over `_`
+because it lets user avoid pressing Shift on popular keyboards). For example:
+`file_size` becomes `file-size`, `file_size.max` becomes `file-size-max`.
+
+Command-line aliases (`cmdline_aliases` property) in the argument specification
+will also be added as command-line option. For more information about
+`cmdline_aliases`, see `Rinci::function`.
+
+If function argument option name clashes with command-line option or another
+existing option, it will be renamed to `NAME-arg` (or `NAME-arg2` and so on).
+For example: `help` will become `help-arg` (if `common_opts` contains `help`,
+that is). If a command-line alias conflicts, a warning will be displayed and the
+alias will not be added as option.
+
+For arguments with type of `bool`, Getopt::Long will by default also add
+`--noNAME` in addition to `--name`.
+
+If `per_arg_json` setting is active, and argument's schema is not a "required
+simple scalar" (e.g. an array, or a nullable string), then `--NAME-json` will
+also be added to let users input undef (through `--NAME-json null`) or a
+non-scalar value (e.g. `--NAME-json '[1,2,3]'`). If this name conflicts with
+another existing option, a warning will be displayed and the option will not be
+added.
+
+If `per_arg_yaml` setting is active, and argument's schema is not a "required
+simple scalar" (e.g. an array, or a nullable string), then `--NAME-yaml` will
+also be added to let users input undef (through `--NAME-yaml '~'`) or a
+non-scalar value (e.g. `--NAME-yaml '[foo, bar]'`). If this name conflicts with
+another existing option, a warning will be displayed and the option will not be
+added. YAML can express a larger set of values, e.g. binary data, circular
+references, etc.
+
+_
+    args => {
+        meta => {
+            summary => 'Rinci function metadata',
+            schema  => 'hash*',
+            req     => 1,
+        },
+        common_opts => {
+            summary => 'A hash of Getopt::Long option specifications'.
+                'and handlers',
+            schema  => 'hash*',
+            description => <<'_',
+
+This argument is used to specify common options.
+
+_
+        },
+        per_arg_json => {
+            summary => 'Whether to add --NAME-json for non-simple arguments',
+            schema  => 'bool',
+            default => 0,
+            description => <<'_',
+
+Will also interpret command-line arguments as JSON if assigned to function
+arguments, if arguments' schema is not simple scalar.
+
+_
+        },
+        per_arg_yaml => {
+            summary => 'Whether to add --NAME-yaml for non-simple arguments',
+            schema  => 'bool',
+            default => 0,
+            description => <<'_',
+
+Will also interpret command-line arguments as YAML if assigned to function
+arguments, if arguments' schema is not simple scalar.
+
+_
+        },
+    },
+};
+sub _gen_go_specs_from_meta {
+    my %args = @_;
+}
 }
 
 sub _parse_yaml {
@@ -85,6 +169,12 @@ _
         meta => {
             schema => ['hash*' => {}],
             req => 1,
+        },
+        meta_is_normalized => {
+            summary => 'Can be set to 1 if your metadata is normalized, '.
+                'to avoid duplicate effort',
+            schema => 'bool',
+            default => 0,
         },
         check_required_args => {
             schema => ['bool'=>{default=>1}],
@@ -220,36 +310,35 @@ _
 sub get_args_from_argv {
     require Getopt::Long;
 
-    my %input_args = @_;
-    my $argv       = $input_args{argv} // \@ARGV;
-    my $meta       = $input_args{meta} or return [400, "Please specify meta"];
-    my $v = $meta->{v} // 1.0;
-    return [412, "Only metadata version 1.1 is supported, given $v"]
-        unless $v == 1.1;
-    my $args_p     = clone($meta->{args} // {});
-    my $strict     = $input_args{strict} // 1;
-    my $extra_go_b = $input_args{extra_getopts_before} // [];
-    my $extra_go_a = $input_args{extra_getopts_after} // [];
-    my $per_arg_yaml = $input_args{per_arg_yaml} // 0;
-    my $per_arg_json = $input_args{per_arg_json} // 0;
-    my $allow_extra_elems = $input_args{allow_extra_elems} // 0;
-    my $on_missing = $input_args{on_missing_required_args};
-    $log->tracef("-> get_args_from_argv(), argv=%s", $argv);
+    my %fargs = @_;
+    my $argv       = $fargs{argv} // \@ARGV;
+    my $meta       = $fargs{meta} or return [400, "Please specify meta"];
+    unless ($fargs{meta_is_normalized}) {
+        require Perinci::Sub::Normalize;
+        $meta = Perinci::Sub::Normalize::normalize_function_metadata($meta);
+    }
+    my $strict     = $fargs{strict} // 1;
+    my $extra_go_b = $fargs{extra_getopts_before} // [];
+    my $extra_go_a = $fargs{extra_getopts_after} // [];
+    my $per_arg_yaml = $fargs{per_arg_yaml} // 0;
+    my $per_arg_json = $fargs{per_arg_json} // 0;
+    my $allow_extra_elems = $fargs{allow_extra_elems} // 0;
+    my $on_missing = $fargs{on_missing_required_args};
+    #$log->tracef("-> get_args_from_argv(), argv=%s", $argv);
 
     # the resulting args
-    my $args = {};
+    my $rargs = {};
 
     my @go_spec;
 
     # 1. first we form Getopt::Long spec
 
+    my $args_p = $meta->{args} // {};
     for my $a (keys %$args_p) {
         my $as = $args_p->{$a};
-        $as->{schema} = Data::Sah::normalize_schema($as->{schema} // 'any');
         # XXX normalization of 'of' clause should've been handled by sah itself
         if ($as->{schema}[0] eq 'array' && $as->{schema}[1]{of}) {
-            $as->{schema}[1]{of} = Data::Sah::normalize_schema(
-                $as->{schema}[1]{of});
+            $as->{schema}[1]{of} = normalize_schema($as->{schema}[1]{of});
         }
         my $go_opt;
         $a =~ s/_/-/g; # arg_with_underscore becomes --arg-with-underscore
@@ -293,25 +382,25 @@ sub get_args_from_argv {
             my $go_handler = sub {
                 my ($val, $val_set);
                 if ($is_array_of_simple_scalar) {
-                    $args->{$arg_key} //= [];
+                    $rargs->{$arg_key} //= [];
                     $val_set = 1; $val = $_[1];
-                    push @{ $args->{$arg_key} }, $val;
+                    push @{ $rargs->{$arg_key} }, $val;
                 } elsif ($is_simple_scalar) {
                     $val_set = 1; $val = $_[1];
-                    $args->{$arg_key} = $val;
+                    $rargs->{$arg_key} = $val;
                 } else {
                     {
                         my ($success, $e, $decoded);
                         ($success, $e, $decoded) = _parse_json($_[1]);
                         if ($success) {
                             $val_set = 1; $val = $decoded;
-                            $args->{$arg_key} = $val;
+                            $rargs->{$arg_key} = $val;
                             last;
                         }
                         ($success, $e, $decoded) = _parse_yaml($_[1]);
                         if ($success) {
                             $val_set = 1; $val = $decoded;
-                            $args->{$arg_key} = $val;
+                            $rargs->{$arg_key} = $val;
                             last;
                         }
                         die "Invalid YAML/JSON in arg '$arg_key'";
@@ -321,7 +410,7 @@ sub get_args_from_argv {
 
                 if ($val_set && $as->{cmdline_on_getopt}) {
                     $as->{cmdline_on_getopt}->(
-                        arg=>$name, value=>$val, args=>$args,
+                        arg=>$name, value=>$val, args=>$rargs,
                         opt=>$_[0]{ctl}[1], # option name
                     );
                 }
@@ -333,7 +422,7 @@ sub get_args_from_argv {
                     my ($success, $e, $decoded);
                     ($success, $e, $decoded) = _parse_json($_[1]);
                     if ($success) {
-                        $args->{$arg_key} = $decoded;
+                        $rargs->{$arg_key} = $decoded;
                     } else {
                         die "Invalid JSON in option --$name-json: $_[1]: $e";
                     }
@@ -344,7 +433,7 @@ sub get_args_from_argv {
                     my ($success, $e, $decoded);
                     ($success, $e, $decoded) = _parse_yaml($_[1]);
                     if ($success) {
-                        $args->{$arg_key} = $decoded;
+                        $rargs->{$arg_key} = $decoded;
                     } else {
                         die "Invalid YAML in option --$name-yaml: $_[1]: $e";
                     }
@@ -380,7 +469,7 @@ sub get_args_from_argv {
                             }
                         }
                         push @go_spec,
-                            $go_opt=>sub {$alspec->{code}->($args, $_[1])};
+                            $go_opt=>sub {$alspec->{code}->($rargs, $_[1])};
                     } else {
                         push @go_spec, $go_opt=>$go_handler;
                     }
@@ -389,10 +478,10 @@ sub get_args_from_argv {
         }
     }
 
-    # 2. then we run GetOptions to fill $args from command-line opts
+    # 2. then we run GetOptions to fill $rargs from command-line opts
 
     @go_spec = (@$extra_go_b, @go_spec, @$extra_go_a);
-    $log->tracef("GetOptions spec: %s", \@go_spec);
+    #$log->tracef("GetOptions spec: %s", \@go_spec);
     my $old_go_opts = Getopt::Long::Configure(
         $strict ? "no_pass_through" : "pass_through",
         "no_ignore_case", "permute", "bundling", "no_getopt_compat");
@@ -402,12 +491,13 @@ sub get_args_from_argv {
         return [500, "GetOptions failed"] if $strict;
     }
 
-    # 3. then we try to fill $args from remaining command-line arguments (for
+    # 3. then we try to fill $rargs from remaining command-line arguments (for
     # args which have 'pos' spec specified)
 
     if (@$argv) {
         my $res = get_args_from_array(
-            array=>$argv, _args_p=>$args_p,
+            array=>$argv, meta => $meta,
+            meta_is_normalized => 1,
             allow_extra_elems => $allow_extra_elems,
         );
         if ($res->[0] != 200 && $strict) {
@@ -417,7 +507,7 @@ sub get_args_from_argv {
             for my $name (keys %$pos_args) {
                 my $as  = $args_p->{$name};
                 my $val = $pos_args->{$name};
-                if (exists $args->{$name}) {
+                if (exists $rargs->{$name}) {
                     return [400, "You specified option --$name but also ".
                                 "argument #".$as->{pos}] if $strict;
                 }
@@ -465,17 +555,17 @@ sub get_args_from_argv {
                         die "Invalid JSON/YAML in #$as->{pos}";
                     }
                 }
-                $args->{$name} = $val;
+                $rargs->{$name} = $val;
                 # we still call cmdline_on_getopt for this
                 if ($as->{cmdline_on_getopt}) {
                     if ($as->{greedy}) {
                         $as->{cmdline_on_getopt}->(
-                            arg=>$name, value=>$_, args=>$args,
+                            arg=>$name, value=>$_, args=>$rargs,
                             opt=>undef, # this marks that value is retrieved from cmdline arg
                         ) for @$val;
                     } else {
                         $as->{cmdline_on_getopt}->(
-                            arg=>$name, value=>$val, args=>$args,
+                            arg=>$name, value=>$val, args=>$rargs,
                             opt=>undef, # this marks that value is retrieved from cmdline arg
                         );
                     }
@@ -489,23 +579,23 @@ sub get_args_from_argv {
     my $missing_arg;
     for my $a (keys %$args_p) {
         my $as = $args_p->{$a};
-        if (!exists($args->{$a})) {
+        if (!exists($rargs->{$a})) {
             next unless $as->{req};
             # give a chance to hook to set missing arg
             if ($on_missing) {
-                next if $on_missing->(arg=>$a, args=>$args, spec=>$as);
+                next if $on_missing->(arg=>$a, args=>$rargs, spec=>$as);
             }
-            next if exists $args->{$a};
+            next if exists $rargs->{$a};
             $missing_arg = $a;
-            if (($input_args{check_required_args} // 1) && $strict) {
+            if (($fargs{check_required_args} // 1) && $strict) {
                 return [400, "Missing required argument: $a"];
             }
         }
     }
 
-    $log->tracef("<- get_args_from_argv(), args=%s, remaining argv=%s",
-                 $args, $argv);
-    [200, "OK", $args, {"func.missing_arg"=>$missing_arg}];
+    #$log->tracef("<- get_args_from_argv(), args=%s, remaining argv=%s",
+    #             $rargs, $argv);
+    [200, "OK", $rargs, {"func.missing_arg"=>$missing_arg}];
 }
 
 1;
@@ -523,7 +613,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-This document describes version 0.35 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-07-04.
+This document describes version 0.36 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-07-08.
 
 =head1 SYNOPSIS
 
@@ -611,6 +701,10 @@ contains --help, and one of function arguments happens to be 'help', the extra
 specification won't have any effect.
 
 =item * B<meta>* => I<hash>
+
+=item * B<meta_is_normalized> => I<bool> (default: 0)
+
+Can be set to 1 if your metadata is normalized, to avoid duplicate effort.
 
 =item * B<on_missing_required_args> => I<code>
 

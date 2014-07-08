@@ -1,11 +1,20 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.36     2014-07-08 (SHARYANTO)
+
+         - Adjust to Perinci::Sub::GetArgs::Argv 0.14.
+
+         - Add 'meta_is_normalized' option.
+
+
 0.35     2014-07-04 (SHARYANTO)
 
          - Still call cmdline_on_getopt routine when value for function argument
            is specified through command-line argument instead of command-line
-           options. This is usually desired to catch all command-line
-           options/arguments.
+           options. This is usually desired to "catch" all command-line
+           options/arguments (process them through cmdline_on_getopt routine).
+           Note that the Rinci::function standard hasn't said anything about
+           this yet.
 
          - Provide 'opt' for cmdline_on_getopt routine to let it know whether it
            is specified as an option (where 'opt' will contain the option name,
