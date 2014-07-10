@@ -21,8 +21,9 @@ my %WriteMakefileArgs = (
   "NAME" => "Perinci::Sub::GetArgs::Argv",
   "PREREQ_PM" => {
     "Data::Clean::FromJSON" => "0.11",
-    "Data::Clone" => 0,
     "Data::Sah::Normalize" => 0,
+    "Function::Fallback::CoreOrPP" => 0,
+    "Getopt::Long::Util" => "0.74",
     "JSON" => 0,
     "Perinci::Sub::GetArgs::Array" => "0.14",
     "Perinci::Sub::Normalize" => 0,
@@ -31,12 +32,13 @@ my %WriteMakefileArgs = (
     "YAML::Syck" => 0
   },
   "TEST_REQUIRES" => {
+    "Data::Clean::JSON" => 0,
     "File::Spec" => 0,
     "IO::Handle" => 0,
     "IPC::Open3" => 0,
     "Test::More" => "0.98"
   },
-  "VERSION" => "0.36",
+  "VERSION" => "0.37",
   "test" => {
     "TESTS" => "t/*.t"
   }
@@ -45,9 +47,11 @@ my %WriteMakefileArgs = (
 
 my %FallbackPrereqs = (
   "Data::Clean::FromJSON" => "0.11",
-  "Data::Clone" => 0,
+  "Data::Clean::JSON" => 0,
   "Data::Sah::Normalize" => 0,
   "File::Spec" => 0,
+  "Function::Fallback::CoreOrPP" => 0,
+  "Getopt::Long::Util" => "0.74",
   "IO::Handle" => 0,
   "IPC::Open3" => 0,
   "JSON" => 0,

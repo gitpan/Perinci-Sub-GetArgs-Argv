@@ -1,5 +1,34 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.37     2014-07-09 (SHARYANTO)
+
+         [INCOMPATIBLE CHANGES]
+
+         - Changes the interface and the parsing rules slightly. Since I want to
+           remove --action and the subtle difference of 'extra_getopts_before'
+           and 'extra_getopts_after'. Now we avoid clashes between common
+           options like '--help' and function arguments of the same name (they
+           will be renamed to '--help-arg', or '--help-arg2' and so on upon
+           clash). Clash will also be avoided between '--ARGNAME' and
+           '--ARGNAME-json' should that happen.
+
+         [REMOVED FEATURES]
+
+         - Remove 'check_required_args' option. Now function still returns 200
+           on missing args. Missing args are already reported in the result
+           metadata ('func.missing_args').
+
+         - Remove 'extra_getopts_before' and 'extra_getopts_after', replace it
+           with 'common_opts' (a hash of Getopt::Long specification name and
+           handlers).
+
+         [ENHANCEMENTS]
+
+         - Refactor the code that generates Getopt::Long spec to its own
+           function: gen_getopt_long_spec_from_meta() so it's reusable from e.g.
+           routine that wants to generate usage/help message.
+
+
 0.36     2014-07-08 (SHARYANTO)
 
          - Adjust to Perinci::Sub::GetArgs::Argv 0.14.

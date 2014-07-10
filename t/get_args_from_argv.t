@@ -7,8 +7,10 @@ use warnings;
 
 use Test::More 0.98;
 
-use Data::Clone qw(clone);
-use Perinci::Sub::GetArgs::Argv qw(get_args_from_argv);
+use Function::Fallback::CoreOrPP qw(clone);
+use Perinci::Sub::GetArgs::Argv qw(
+                                      get_args_from_argv
+                              );
 
 my $meta = {
     v => 1.1,
@@ -46,8 +48,6 @@ test_getargs(meta=>$meta, argv=>[qw/--arg1 1 --arg2 2 3/], error=>1,
 test_getargs(meta=>$meta, argv=>[qw/1 2 3/], error=>1,
            name=>"extra args given = fails (2)");
 
-test_getargs(meta=>$meta, argv=>[qw//], error=>1,
-           name=>"required missing = fails");
 test_getargs(meta=>$meta, argv=>[qw/--foo bar/], error=>1,
            name=>"unknown args given = fails");
 
@@ -100,24 +100,25 @@ test_getargs(meta=>$meta, argv=>['--arg1', '{"foo": false}',
     my $extra  = 0;
     my $extra2 = 0;
     test_getargs(meta=>$meta, argv=>[qw/--arg1 1 --arg2 2 --extra --extra2 6/],
-                 extra_getopts_before=>[extra=>sub{$extra=5},
-                                        "extra2=s"=>sub{$extra2=$_[1]}],
+                 common_opts=>{extra=>sub{$extra=5},
+                               "extra2=s"=>sub{$extra2=$_[1]}},
                  args=>{arg1=>1, arg2=>2},
                  posttest=>sub {
-                     is($extra , 5, "extra getopt is parsed 1");
-                     is($extra2, 6, "extra getopt is parsed 2");
+                     is($extra , 5, "extra is parsed");
+                     is($extra2, 6, "extra2 is parsed");
                  },
-                 name=>"opt: extra_getopts_before",
+                 name=>"opt: common_opts",
              );
     $extra = 0;
-    test_getargs(meta=>$meta, argv=>[qw/--arg1 1 --arg2 2/],
-                 extra_getopts=>["arg1=s"=>sub{$extra=1},
-                                 "--arg2=s"=>sub{$extra=2}],
-                 args=>{arg1=>1, arg2=>2},
+    test_getargs(meta=>$meta, argv=>[qw/ --arg1 1 --arg2 2 --arg1-arg 3 --arg2-arg 4/],
+                 common_opts=>{"arg1=s"=>sub{$extra=$_[1]},
+                               "--arg2=s"=>sub{$extra2=$_[1]}},
+                 args=>{arg1=>3, arg2=>4},
                  posttest=>sub {
-                     is($extra, 0, "clashing extra getopt is ignored");
+                     is($extra , 1, "arg1 is processed");
+                     is($extra2, 2, "arg2 is processed");
                  },
-                 name=>"opt: extra_getopts_before (clash)",
+                 name=>"opt: common_opts (clash with arg)",
              );
 }
 
@@ -146,18 +147,11 @@ $meta = {
 
 test_getargs(meta=>$meta,
              argv=>[qw//],
-             #check_required_args=>1, # the default
-             error=>1,
-             name=>"opt: check_required_args=1",
-         );
-test_getargs(meta=>$meta,
-             argv=>[qw//],
-             check_required_args=>0,
              args=>{},
-             name=>"opt: check_required_args=0",
+             name=>"missing required args",
              posttest => sub {
                  my $res = shift;
-                 is($res->[3]{'func.missing_arg'}, 'arg1');
+                 is_deeply($res->[3]{'func.missing_args'}, ['arg1']);
              },
          );
 
@@ -183,7 +177,7 @@ test_getargs(name=>"underscore becomes dash (3)",
 $meta = {
     v => 1.1,
     args => {
-        foo => {schema=>'str'},
+        foo => {schema=>'hash'},
     },
 };
 test_getargs(meta=>$meta, argv=>[qw/--foo-yaml ~/],
@@ -232,7 +226,7 @@ test_getargs(meta=>$meta, argv=>[qw/--nob2/],
 test_getargs(meta=>$meta, argv=>[qw/-S blah/],
              args=>{s2=>"blah"},
              name=>"cmdline_aliases: S");
-test_getargs(meta=>$meta, argv=>[qw/--S_foo/], # XXX S-foo not yet provided?
+test_getargs(meta=>$meta, argv=>[qw/--S-foo/], # XXX S-foo not yet provided?
              args=>{s2=>"foo"},
              name=>"cmdline_aliases: S_foo");
 
@@ -326,12 +320,22 @@ $meta = {
     },
 };
 test_getargs(meta=>$meta, argv=>[qw//],
-             error=>1,
-             name=>"without on_missing_required_args hook, err");
+             args=>{},
+             posttest=>sub {
+                 my $res = shift;
+                 is_deeply($res->[3]{'func.missing_args'}, ['a']);
+             },
+             name=>"without on_missing_required_args hook",
+         );
 test_getargs(meta=>$meta, argv=>[qw//],
              args=>{},
              on_missing_required_args => sub {1},
-             name=>"returning 1 from on_missing_required_args hook = no err");
+             posttest=>sub {
+                 my $res = shift;
+                 is_deeply($res->[3]{'func.missing_args'}, []);
+             },
+             name=>"returning 1 from on_missing_required_args hook",
+         );
 
 test_getargs(meta=>$meta, argv=>[qw//],
              args=>{a=>'v1'},
@@ -394,7 +398,7 @@ test_getargs(meta=>$meta, argv=>[qw/-X=foo/],
             my $res = shift;
             is_deeply(\@arg, [
                 {arg=>'arg', args=>$res->[2], opt=>'arg', value=>1},
-                {arg=>'arg', args=>$res->[2], opt=>'A'  , value=>2},
+                {arg=>'arg', args=>$res->[2], opt=>'arg', value=>2},
             ]) or diag explain \@arg;
         },
     );
@@ -469,10 +473,10 @@ test_getargs(meta=>$meta, argv=>[qw/-X=foo/],
         },
     };
     test_getargs(
-        name => 'error 502 (1)',
-        meta => $meta,
-        argv => [qw/--arg1 val/],
-        args => {arg1=>'val'},
+        name   => 'error 502 (1)',
+        meta   => $meta,
+        argv   => [qw/--arg1 val/],
+        status => 502,
     );
     test_getargs(
         name   => 'error 502 (2)',
@@ -494,8 +498,8 @@ sub test_getargs {
         my $argv = clone($args{argv});
         my $res;
         my %input_args = (argv=>$argv, meta=>$args{meta});
-        for (qw/strict check_required_args
-                extra_getopts_before extra_getopts_after
+        for (qw/strict
+                common_opts
                 per_arg_json per_arg_yaml
                 allow_extra_elems on_missing_required_args/) {
             $input_args{$_} = $args{$_} if defined $args{$_};

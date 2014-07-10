@@ -6,15 +6,19 @@ use warnings;
 #use Log::Any '$log';
 
 use Data::Sah::Normalize qw(normalize_schema);
+use Getopt::Long::Util qw(parse_getopt_long_opt_spec);
 use Perinci::Sub::GetArgs::Array qw(get_args_from_array);
 use Perinci::Sub::Util qw(err);
 
 use Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT_OK = qw(get_args_from_argv);
+our @EXPORT_OK = qw(
+                       gen_getopt_long_spec_from_meta
+                       get_args_from_argv
+               );
 
-our $DATE = '2014-07-08'; # DATE
-our $VERSION = '0.36'; # VERSION
+our $DATE = '2014-07-10'; # DATE
+our $VERSION = '0.37'; # VERSION
 
 our %SPEC;
 
@@ -22,19 +26,22 @@ my $re_simple_scalar = qr/^(str|num|int|float|bool)$/;
 
 # retun ($success?, $errmsg, $res)
 sub _parse_json {
-    require Data::Clean::FromJSON;
-    require JSON;
-
     my $str = shift;
 
-    state $json = JSON->new->allow_nonref;
+    state $json = do {
+        require JSON;
+        JSON->new->allow_nonref;
+    };
 
     # to rid of those JSON::XS::Boolean objects which currently choke
     # Data::Sah-generated validator code. in the future Data::Sah can be
     # modified to handle those, or we use a fork of JSON::XS which doesn't
     # produce those in the first place (probably only when performance is
     # critical).
-    state $cleanser = Data::Clean::FromJSON->get_cleanser;
+    state $cleanser = do {
+        require Data::Clean::FromJSON;
+        Data::Clean::FromJSON->get_cleanser;
+    };
 
     my $res;
     eval { $res = $json->decode($str); $cleanser->clean_in_place($res) };
@@ -42,28 +49,66 @@ sub _parse_json {
     return (!$e, $e, $res);
 }
 
-if(0) {$SPEC{gen_go_specs_from_meta} = {
+sub _parse_yaml {
+    require YAML::Syck;
+
+    my $str = shift;
+
+    local $YAML::Syck::ImplicitTyping = 1;
+    my $res;
+    eval { $res = YAML::Syck::Load($str) };
+    my $e = $@;
+    return (!$e, $e, $res);
+}
+
+sub _arg2opt {
+    my $opt = shift;
+    $opt =~ s/[^A-Za-z0-9-]+/-/g; # foo.bar_baz becomes --foo-bar-baz
+    $opt;
+}
+
+sub _opt2ospec {
+    my ($opt, $schema) = @_;
+    if ($schema->[0] eq 'bool') {
+        if (length($opt) == 1 || $schema->[1]{is}) {
+            # single-letter option like -b doesn't get --nob.
+            # [bool=>{is=>1}] also means it's a flag and should not get
+            # --nofoo.
+            return $opt;
+        } else {
+            return "$opt!";
+        }
+    } else {
+        return "$opt=" . ($schema->[0] eq 'int' ? 'i' :
+                              $schema->[0] eq 'float' ? 'f' :
+                                  's');
+    }
+}
+
+$SPEC{gen_getopt_long_spec_from_meta} = {
     v           => 1.1,
-    summary     => 'Generate Getopt::Long spec from function metadata',
+    summary     => 'Generate Getopt::Long spec from Rinci function metadata',
     description => <<'_',
 
 Function arguments will be mapped to command-line options with the same name,
 with non-alphanumeric characters changed to `-` (`-` is preferred over `_`
 because it lets user avoid pressing Shift on popular keyboards). For example:
-`file_size` becomes `file-size`, `file_size.max` becomes `file-size-max`.
-
-Command-line aliases (`cmdline_aliases` property) in the argument specification
-will also be added as command-line option. For more information about
-`cmdline_aliases`, see `Rinci::function`.
-
-If function argument option name clashes with command-line option or another
+`file_size` becomes `file-size`, `file_size.max` becomes `file-size-max`. If
+function argument option name clashes with command-line option or another
 existing option, it will be renamed to `NAME-arg` (or `NAME-arg2` and so on).
 For example: `help` will become `help-arg` (if `common_opts` contains `help`,
-that is). If a command-line alias conflicts, a warning will be displayed and the
-alias will not be added as option.
+that is).
+
+Each command-line alias (`cmdline_aliases` property) in the argument
+specification will also be added as command-line option, except if it clashes
+with an existing option, in which case the function will warn and skip adding
+the alias. For more information about `cmdline_aliases`, see `Rinci::function`.
 
 For arguments with type of `bool`, Getopt::Long will by default also add
 `--noNAME` in addition to `--name`.
+
+For arguments with type array of simple scalar, `--NAME` can be specified more
+than once to append to the array.
 
 If `per_arg_json` setting is active, and argument's schema is not a "required
 simple scalar" (e.g. an array, or a nullable string), then `--NAME-json` will
@@ -80,12 +125,43 @@ another existing option, a warning will be displayed and the option will not be
 added. YAML can express a larger set of values, e.g. binary data, circular
 references, etc.
 
+Will produce a hash (Getopt::Long spec), with `func.specmeta` and `func.opts`
+that contain extra information (`func.specmeta` is a hash of getopt spec name
+and a hash of extra information while `func.opts` lists all used option names).
+For example this is a complete response:
+
+    [200, "OK",
+     # Getopt::Long spec
+     {"help|h"     => sub { ... }, # this is simply taken from 'common_opts'
+      "version"    => sub { ... }, # ditto
+      "str-arg=s"  => sub { ... }, # from arg 'str_arg'
+      "ary-arg=s"  => sub { ... }, # from arg 'ary_arg'
+      "ary-arg-json=s" => sub { ... },
+      "ary-arg-yaml=s" => sub { ... }},
+     # result metadata
+     {
+       # extra information
+       "func.specmeta" => {
+           "help|h"    => {arg=>undef},
+           "version"   => {arg=>undef},
+           "str-arg=s" => {arg=>'str_arg'},
+           "ary-arg=s" => {arg=>'ary_arg'},
+           "ary-arg-json=s" => {arg=>'ary_arg', is_json=>1},
+           "ary-arg-yaml=s" => {arg=>'ary_arg', is_yaml=>1},
+       },
+       "func.opts" => ['help','h','version','str-arg','ary-arg','ary-arg-json','ary-arg-yaml'],
+     }]
+
 _
     args => {
         meta => {
             summary => 'Rinci function metadata',
             schema  => 'hash*',
             req     => 1,
+        },
+        args => {
+            summary => 'Reference to hash which will store the result',
+            schema  => 'hash*',
         },
         common_opts => {
             summary => 'A hash of Getopt::Long option specifications'.
@@ -121,21 +197,199 @@ _
         },
     },
 };
-sub _gen_go_specs_from_meta {
-    my %args = @_;
-}
-}
+sub gen_getopt_long_spec_from_meta {
+    my %fargs = @_;
 
-sub _parse_yaml {
-    require YAML::Syck;
+    my $meta       = $fargs{meta} or return [400, "Please specify meta"];
+    unless ($fargs{meta_is_normalized}) {
+        require Perinci::Sub::Normalize;
+        $meta = Perinci::Sub::Normalize::normalize_function_metadata($meta);
+    }
+    my $common_opts  = $fargs{common_opts} // {};
+    my $per_arg_yaml = $fargs{per_arg_yaml} // 0;
+    my $per_arg_json = $fargs{per_arg_json} // 0;
+    my $rargs        = $fargs{args} // {};
 
-    my $str = shift;
+    my %go_spec;
+    my %specmeta; # key = option spec, val = hash of extra info
+    my %seen_opts;
 
-    local $YAML::Syck::ImplicitTyping = 1;
-    my $res;
-    eval { $res = YAML::Syck::Load($str) };
-    my $e = $@;
-    return (!$e, $e, $res);
+    for my $os (keys %$common_opts) {
+        my $res = parse_getopt_long_opt_spec($os)
+            or return [400, "Can't parse common opt spec '$os'"];
+        $go_spec{ $res->{normalized} } = $common_opts->{$os};
+        $specmeta{ $res->{normalized} } = {arg=>undef};
+        for (@{ $res->{opts} }) {
+            return [412, "Clash of common opt '$_'"] if $seen_opts{$_};
+            $seen_opts{$_}++;
+            if ($res->{is_neg}) {
+                $seen_opts{"no$_"}++;
+                $seen_opts{"no-$_"}++;
+            }
+        }
+    }
+
+    my $args_p = $meta->{args} // {};
+    for my $arg (keys %$args_p) {
+        my $as    = $args_p->{$arg};
+        my $sch   = $as->{schema} // ['any', {}];
+        my $type  = $sch->[0] // '';
+        my $cs    = $sch->[1] // {};
+
+        # XXX normalization of 'of' clause should've been handled by sah itself
+        if ($type eq 'array' && $cs->{of}) {
+            $cs->{of} = normalize_schema($cs->{of});
+        }
+        my $opt = _arg2opt($arg);
+        if ($seen_opts{$opt}) {
+            my $i = 1;
+            my $opt2;
+            while (1) {
+                $opt2 = "$opt-arg" . ($i > 1 ? $i : '');
+                last unless $seen_opts{$opt2};
+                $i++;
+            }
+            $opt = $opt2;
+        }
+
+        my $ospec = _opt2ospec($opt, $sch);
+        my $is_simple_scalar = $type =~ $re_simple_scalar;
+        my $is_array_of_simple_scalar = $type eq 'array' &&
+            $cs->{of} && $cs->{of}[0] =~ $re_simple_scalar;
+
+        # why we use coderefs here? due to Getopt::Long's behavior. when
+        # @ARGV=qw() and go_spec is ('foo=s' => \$opts{foo}) then %opts will
+        # become (foo=>undef). but if go_spec is ('foo=s' => sub { $opts{foo} =
+        # $_[1] }) then %opts will become (), which is what we prefer, so we can
+        # later differentiate "unspecified" (exists($opts{foo}) == false) and
+        # "specified as undef" (exists($opts{foo}) == true but
+        # defined($opts{foo}) == false).
+
+        my $handler = sub {
+            my ($val, $val_set);
+            if ($is_array_of_simple_scalar) {
+                $rargs->{$arg} //= [];
+                $val_set = 1; $val = $_[1];
+                push @{ $rargs->{$arg} }, $val;
+            } elsif ($is_simple_scalar) {
+                $val_set = 1; $val = $_[1];
+                $rargs->{$arg} = $val;
+            } else {
+                {
+                    my ($success, $e, $decoded);
+                    ($success, $e, $decoded) = _parse_json($_[1]);
+                    if ($success) {
+                        $val_set = 1; $val = $decoded;
+                        $rargs->{$arg} = $val;
+                        last;
+                    }
+                    ($success, $e, $decoded) = _parse_yaml($_[1]);
+                    if ($success) {
+                        $val_set = 1; $val = $decoded;
+                        $rargs->{$arg} = $val;
+                        last;
+                    }
+                    die "Invalid YAML/JSON in arg '$arg'";
+                }
+            }
+            if ($val_set && $as->{cmdline_on_getopt}) {
+                $as->{cmdline_on_getopt}->(
+                    arg=>$arg, value=>$val, args=>$rargs,
+                    opt=>$opt,
+                );
+            }
+        }; # handler
+        $go_spec{$ospec} = $handler;
+        $specmeta{$ospec} = {arg=>$arg};
+        $seen_opts{$opt}++;
+        if ($type eq 'bool' && !defined($cs->{is})) {
+            $seen_opts{"no$opt"}++;
+            $seen_opts{"no-$opt"}++;
+        }
+
+        if ($per_arg_json && $type !~ $re_simple_scalar) {
+            my $jopt = "$opt-json";
+            if ($seen_opts{$jopt}) {
+                warn "Clash of option: $jopt, not added";
+            } else {
+                my $jospec = "$jopt=s";
+                $go_spec{$jospec} = sub {
+                    my ($success, $e, $decoded);
+                    ($success, $e, $decoded) = _parse_json($_[1]);
+                    if ($success) {
+                        $rargs->{$arg} = $decoded;
+                    } else {
+                        die "Invalid JSON in option --$jopt: $_[1]: $e";
+                    }
+                };
+                $specmeta{$jospec} = {arg=>$arg, is_json=>1};
+                $seen_opts{$jopt}++;
+            }
+        }
+        if ($per_arg_yaml && $type !~ $re_simple_scalar) {
+            my $yopt = "$opt-yaml";
+            if ($seen_opts{$yopt}) {
+                warn "Clash of option: $yopt, not added";
+            } else {
+                my $yospec = "$yopt=s";
+                $go_spec{$yospec} = sub {
+                    my ($success, $e, $decoded);
+                    ($success, $e, $decoded) = _parse_yaml($_[1]);
+                    if ($success) {
+                        $rargs->{$arg} = $decoded;
+                    } else {
+                        die "Invalid YAML in option --$yopt: $_[1]: $e";
+                    }
+                };
+                $specmeta{$yospec} = {arg=>$arg, is_yaml=>1};
+                $seen_opts{$yopt}++;
+            }
+        }
+
+        # parse argv_aliases
+        if ($as->{cmdline_aliases}) {
+            for my $al (keys %{$as->{cmdline_aliases}}) {
+                my $alopt = _arg2opt($al);
+                if ($seen_opts{$alopt}) {
+                    warn "Clash of cmdline_alias option $al";
+                    next;
+                }
+                my $alspec = $as->{cmdline_aliases}{$al};
+                my $alsch = $alspec->{schema} // $sch;
+                my $alcode = $alspec->{code};
+                my $alospec;
+                if ($alcode && $type eq 'bool') {
+                    # bool --alias doesn't get --noalias if has code
+                    $alospec = $al; # instead of "$al!"
+                } else {
+                    $alospec = _opt2ospec($alopt, $alsch);
+                }
+
+                if ($alcode) {
+                    if ($alcode eq 'CODE') {
+                        return [
+                            502,
+                            join("",
+                                 "Code in cmdline_aliases for arg $arg ",
+                                 "got converted into string, probably ",
+                                 "because of JSON/YAML transport"),
+                        ];
+                    }
+                    $go_spec{$alospec} = sub {$alcode->($rargs, $_[1])};
+                } else {
+                    $go_spec{$alospec} = $handler;
+                }
+                $specmeta{$alospec} = {
+                    arg=>$arg, alias=>$al, is_code=>$alcode ? 1:0};
+                $seen_opts{$alopt}++;
+            }
+        }
+
+    } # for arg
+
+    [200, "OK", \%go_spec,
+     {"func.specmeta" => \%specmeta,
+      "func.opts" => [sort keys %seen_opts]}];
 }
 
 $SPEC{get_args_from_argv} = {
@@ -144,19 +398,17 @@ $SPEC{get_args_from_argv} = {
         '(@ARGV)',
     description => <<'_',
 
-Using information in function metadata's 'args' property, parse command line
-arguments '@argv' into hash '%args', suitable for passing into subs.
+Using information in Rinci function metadata's `args` property, parse command
+line arguments `@argv` into hash `%args`, suitable for passing into subroutines.
 
 Currently uses Getopt::Long's GetOptions to do the parsing.
 
-As with GetOptions, this function modifies its 'argv' argument.
+As with GetOptions, this function modifies its `argv` argument, so you might
+want to copy the original `argv` first (or pass a copy instead) if you want to
+preserve the original.
 
-Why would one use this function instead of using Getopt::Long directly? Among
-other reasons, we want to be able to parse complex types.
-
-This function exists mostly to support command-line options parsing for
-Perinci::CmdLine. See its documentation, on the section of command-line
-options/argument parsing.
+See also: gen_getopt_long_spec_from_meta() which is the routine that generates
+the specification.
 
 _
     args => {
@@ -176,24 +428,13 @@ _
             schema => 'bool',
             default => 0,
         },
-        check_required_args => {
-            schema => ['bool'=>{default=>1}],
-            summary => 'Whether to check required arguments',
-            description => <<'_',
-
-If set to true, will check that required arguments (those with req=>1) have been
-specified. Normally you want this, but Perinci::CmdLine turns this off so users
-can run --help even when arguments are incomplete.
-
-_
-        },
         strict => {
             schema => ['bool' => {default=>1}],
             summary => 'Strict mode',
             description => <<'_',
 
-If set to 0, will still return parsed argv even if there are parsing errors. If
-set to 1 (the default), will die upon error.
+If set to 0, will still return parsed argv even if there are parsing errors
+(reported by Getopt::Long). If set to 1 (the default), will die upon error.
 
 Normally you would want to use strict mode, for more error checking. Setting off
 strict is used by, for example, Perinci::Sub::Complete.
@@ -232,31 +473,12 @@ See also: per_arg_yaml. You should enable just one instead of turning on both.
 
 _
         },
-        extra_getopts_before => {
-            schema => ['array' => {}],
-            summary => 'Specify extra Getopt::Long specification',
+        common_opts => {
+            schema => ['hash*' => {}],
+            summary => 'Specify common options',
             description => <<'_',
 
-If specified, insert extra Getopt::Long specification. This is used, for
-example, by Perinci::CmdLine::run() to add general options --help, --version,
---list, etc so it can mixed with spec arg options, for convenience.
-
-Since the extra specification is put at the front (before function arguments
-specification), the extra options will not be able to override function
-arguments (this is how Getopt::Long works). For example, if extra specification
-contains --help, and one of function arguments happens to be 'help', the extra
-specification won't have any effect.
-
-_
-        },
-        extra_getopts_after => {
-            schema => ['array' => {}],
-            summary => 'Specify extra Getopt::Long specification',
-            description => <<'_',
-
-Just like *extra_getopts_before*, but the extra specification is put _after_
-function arguments specification so extra options can override function
-arguments.
+A hash of Getopt::Long option specifications and handlers.
 
 _
         },
@@ -287,8 +509,7 @@ arguments: (arg => $the_missing_argument_name, args =>
 $the_resulting_args_so_far, spec => $the_arg_spec).
 
 The hook can return true if it succeeds in making the missing situation
-resolved. In this case, the function won't complain about missing argument for
-the corresponding argument.
+resolved. In this case, the function will not report the argument as missing.
 
 _
         },
@@ -298,8 +519,10 @@ _
 
 Error codes:
 
+* 400 - Error in Getopt::Long option specification, e.g. in common_opts.
+
 * 500 - failure in GetOptions, meaning argv is not valid according to metadata
-  specification.
+  specification (only if 'strict' mode is enabled).
 
 * 502 - coderef in cmdline_aliases got converted into a string, probably because
   the metadata was transported (e.g. through Riap::HTTP/Riap::Simple).
@@ -317,175 +540,35 @@ sub get_args_from_argv {
         require Perinci::Sub::Normalize;
         $meta = Perinci::Sub::Normalize::normalize_function_metadata($meta);
     }
-    my $strict     = $fargs{strict} // 1;
-    my $extra_go_b = $fargs{extra_getopts_before} // [];
-    my $extra_go_a = $fargs{extra_getopts_after} // [];
-    my $per_arg_yaml = $fargs{per_arg_yaml} // 0;
-    my $per_arg_json = $fargs{per_arg_json} // 0;
+    my $strict            = $fargs{strict} // 1;
+    my $common_opts       = $fargs{common_opts} // {};
+    my $per_arg_yaml      = $fargs{per_arg_yaml} // 0;
+    my $per_arg_json      = $fargs{per_arg_json} // 0;
     my $allow_extra_elems = $fargs{allow_extra_elems} // 0;
-    my $on_missing = $fargs{on_missing_required_args};
+    my $on_missing        = $fargs{on_missing_required_args};
     #$log->tracef("-> get_args_from_argv(), argv=%s", $argv);
 
-    # the resulting args
+    # to store the resulting args
     my $rargs = {};
 
-    my @go_spec;
-
-    # 1. first we form Getopt::Long spec
-
-    my $args_p = $meta->{args} // {};
-    for my $a (keys %$args_p) {
-        my $as = $args_p->{$a};
-        # XXX normalization of 'of' clause should've been handled by sah itself
-        if ($as->{schema}[0] eq 'array' && $as->{schema}[1]{of}) {
-            $as->{schema}[1]{of} = normalize_schema($as->{schema}[1]{of});
-        }
-        my $go_opt;
-        $a =~ s/_/-/g; # arg_with_underscore becomes --arg-with-underscore
-        my @name = ($a);
-        my $name2go_opt = sub {
-            my ($name, $schema) = @_;
-            if ($schema->[0] eq 'bool') {
-                if (length($name) == 1 || $schema->[1]{is}) {
-                    # single-letter option like -b doesn't get --nob.
-                    # [bool=>{is=>1}] also means it's a flag and should not get
-                    # --nofoo.
-                    return $name;
-                } else {
-                    return "$name!";
-                }
-            } else {
-                return "$name=s";
-            }
-        };
-        my $arg_key;
-        for my $name (@name) {
-            unless (defined $arg_key) { $arg_key = $name; $arg_key =~ s/-/_/g }
-            $name =~ s/\./-/g;
-            $go_opt = $name2go_opt->($name, $as->{schema});
-            my $type = $as->{schema}[0];
-            my $cs   = $as->{schema}[1];
-            my $is_simple_scalar = $type =~ $re_simple_scalar;
-            my $is_array_of_simple_scalar = $type eq 'array' &&
-                $cs->{of} && $cs->{of}[0] =~ $re_simple_scalar;
-            #$log->errorf("TMP:$name ss=%s ass=%s",
-            #             $is_simple_scalar, $is_array_of_simple_scalar);
-
-            # why we use coderefs here? due to getopt::long's behavior. when
-            # @ARGV=qw() and go_spec is ('foo=s' => \$opts{foo}) then %opts will
-            # become (foo=>undef). but if go_spec is ('foo=s' => sub {
-            # $opts{foo} = $_[1] }) then %opts will become (), which is what we
-            # prefer, so we can later differentiate "unspecified"
-            # (exists($opts{foo}) == false) and "specified as undef"
-            # (exists($opts{foo}) == true but defined($opts{foo}) == false).
-
-            my $go_handler = sub {
-                my ($val, $val_set);
-                if ($is_array_of_simple_scalar) {
-                    $rargs->{$arg_key} //= [];
-                    $val_set = 1; $val = $_[1];
-                    push @{ $rargs->{$arg_key} }, $val;
-                } elsif ($is_simple_scalar) {
-                    $val_set = 1; $val = $_[1];
-                    $rargs->{$arg_key} = $val;
-                } else {
-                    {
-                        my ($success, $e, $decoded);
-                        ($success, $e, $decoded) = _parse_json($_[1]);
-                        if ($success) {
-                            $val_set = 1; $val = $decoded;
-                            $rargs->{$arg_key} = $val;
-                            last;
-                        }
-                        ($success, $e, $decoded) = _parse_yaml($_[1]);
-                        if ($success) {
-                            $val_set = 1; $val = $decoded;
-                            $rargs->{$arg_key} = $val;
-                            last;
-                        }
-                        die "Invalid YAML/JSON in arg '$arg_key'";
-                    }
-                }
-                # XXX special parsing of type = date
-
-                if ($val_set && $as->{cmdline_on_getopt}) {
-                    $as->{cmdline_on_getopt}->(
-                        arg=>$name, value=>$val, args=>$rargs,
-                        opt=>$_[0]{ctl}[1], # option name
-                    );
-                }
-            };
-            push @go_spec, $go_opt => $go_handler;
-
-            if ($per_arg_json && $as->{schema}[0] ne 'bool') {
-                push @go_spec, "$name-json=s" => sub {
-                    my ($success, $e, $decoded);
-                    ($success, $e, $decoded) = _parse_json($_[1]);
-                    if ($success) {
-                        $rargs->{$arg_key} = $decoded;
-                    } else {
-                        die "Invalid JSON in option --$name-json: $_[1]: $e";
-                    }
-                };
-            }
-            if ($per_arg_yaml && $as->{schema}[0] ne 'bool') {
-                push @go_spec, "$name-yaml=s" => sub {
-                    my ($success, $e, $decoded);
-                    ($success, $e, $decoded) = _parse_yaml($_[1]);
-                    if ($success) {
-                        $rargs->{$arg_key} = $decoded;
-                    } else {
-                        die "Invalid YAML in option --$name-yaml: $_[1]: $e";
-                    }
-                };
-            }
-
-            # parse argv_aliases
-            if ($as->{cmdline_aliases}) {
-                for my $al (keys %{$as->{cmdline_aliases}}) {
-                    my $alspec = $as->{cmdline_aliases}{$al};
-                    my $type =
-                        $alspec->{schema} ? $alspec->{schema}[0] :
-                            $as->{schema} ? $as->{schema}[0] : '';
-                    if ($alspec->{code} && $type eq 'bool') {
-                        # bool --alias doesn't get --noalias if has code
-                        $go_opt = $al; # instead of "$al!"
-                    } else {
-                        $go_opt = $name2go_opt->(
-                            $al, $alspec->{schema} // $as->{schema});
-                    }
-
-                    if ($alspec->{code}) {
-                        if ($alspec->{code} eq 'CODE') {
-                            if (grep {/\A--\Q$al\E(-yaml|-json)?(=|\z)/}
-                                    @$argv) {
-                                return [
-                                    502,
-                                    join("",
-                                         "Code in cmdline_aliases for arg $a ",
-                                         "got converted into string, probably ",
-                                         "because of JSON transport"),
-                                ];
-                            }
-                        }
-                        push @go_spec,
-                            $go_opt=>sub {$alspec->{code}->($rargs, $_[1])};
-                    } else {
-                        push @go_spec, $go_opt=>$go_handler;
-                    }
-                }
-            }
-        }
-    }
+    # 1. first we generate Getopt::Long spec
+    my $res = gen_getopt_long_spec_from_meta(
+        meta => $meta, meta_is_normalized => 1,
+        args => $rargs,
+        common_opts  => $common_opts,
+        per_arg_json => $per_arg_json,
+        per_arg_yaml => $per_arg_yaml,
+    );
+    return err($res->[0], "Can't generate Getopt::Long spec", $res)
+        if $res->[0] != 200;
+    my $go_spec = $res->[2];
 
     # 2. then we run GetOptions to fill $rargs from command-line opts
-
-    @go_spec = (@$extra_go_b, @go_spec, @$extra_go_a);
     #$log->tracef("GetOptions spec: %s", \@go_spec);
     my $old_go_opts = Getopt::Long::Configure(
         $strict ? "no_pass_through" : "pass_through",
         "no_ignore_case", "permute", "bundling", "no_getopt_compat");
-    my $result = Getopt::Long::GetOptionsFromArray($argv, @go_spec);
+    my $result = Getopt::Long::GetOptionsFromArray($argv, %$go_spec);
     Getopt::Long::Configure($old_go_opts);
     unless ($result) {
         return [500, "GetOptions failed"] if $strict;
@@ -493,6 +576,8 @@ sub get_args_from_argv {
 
     # 3. then we try to fill $rargs from remaining command-line arguments (for
     # args which have 'pos' spec specified)
+
+    my $args_p = $meta->{args};
 
     if (@$argv) {
         my $res = get_args_from_array(
@@ -502,6 +587,8 @@ sub get_args_from_argv {
         );
         if ($res->[0] != 200 && $strict) {
             return err(500, "Get args from array failed", $res);
+        } elsif ($strict && $res->[0] != 200) {
+            return err("Can't get args from argv", $res);
         } elsif ($res->[0] == 200) {
             my $pos_args = $res->[2];
             for my $name (keys %$pos_args) {
@@ -574,9 +661,9 @@ sub get_args_from_argv {
         }
     }
 
-    # 4. check required args
+    # 4. check missing required args
 
-    my $missing_arg;
+    my %missing_args;
     for my $a (keys %$args_p) {
         my $as = $args_p->{$a};
         if (!exists($rargs->{$a})) {
@@ -586,16 +673,16 @@ sub get_args_from_argv {
                 next if $on_missing->(arg=>$a, args=>$rargs, spec=>$as);
             }
             next if exists $rargs->{$a};
-            $missing_arg = $a;
-            if (($fargs{check_required_args} // 1) && $strict) {
-                return [400, "Missing required argument: $a"];
-            }
+            $missing_args{$a} = 1;
         }
     }
 
     #$log->tracef("<- get_args_from_argv(), args=%s, remaining argv=%s",
     #             $rargs, $argv);
-    [200, "OK", $rargs, {"func.missing_arg"=>$missing_arg}];
+    [200, "OK", $rargs, {
+        "func.missing_args" => [sort keys %missing_args],
+        # TODO: return gen_getopt_long_spec_from_meta() result if needed
+    }];
 }
 
 1;
@@ -613,7 +700,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-This document describes version 0.36 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-07-08.
+This document describes version 0.37 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-07-10.
 
 =head1 SYNOPSIS
 
@@ -635,23 +722,133 @@ This module has L<Rinci> metadata.
 =head1 FUNCTIONS
 
 
+=head2 gen_getopt_long_spec_from_meta(%args) -> [status, msg, result, meta]
+
+Generate Getopt::Long spec from Rinci function metadata.
+
+Function arguments will be mapped to command-line options with the same name,
+with non-alphanumeric characters changed to C<-> (C<-> is preferred over C<_>
+because it lets user avoid pressing Shift on popular keyboards). For example:
+C<file_size> becomes C<file-size>, C<file_size.max> becomes C<file-size-max>. If
+function argument option name clashes with command-line option or another
+existing option, it will be renamed to C<NAME-arg> (or C<NAME-arg2> and so on).
+For example: C<help> will become C<help-arg> (if C<common_opts> contains C<help>,
+that is).
+
+Each command-line alias (C<cmdline_aliases> property) in the argument
+specification will also be added as command-line option, except if it clashes
+with an existing option, in which case the function will warn and skip adding
+the alias. For more information about C<cmdline_aliases>, see C<Rinci::function>.
+
+For arguments with type of C<bool>, Getopt::Long will by default also add
+C<--noNAME> in addition to C<--name>.
+
+For arguments with type array of simple scalar, C<--NAME> can be specified more
+than once to append to the array.
+
+If C<per_arg_json> setting is active, and argument's schema is not a "required
+simple scalar" (e.g. an array, or a nullable string), then C<--NAME-json> will
+also be added to let users input undef (through C<--NAME-json null>) or a
+non-scalar value (e.g. C<--NAME-json '[1,2,3]'>). If this name conflicts with
+another existing option, a warning will be displayed and the option will not be
+added.
+
+If C<per_arg_yaml> setting is active, and argument's schema is not a "required
+simple scalar" (e.g. an array, or a nullable string), then C<--NAME-yaml> will
+also be added to let users input undef (through C<--NAME-yaml '~'>) or a
+non-scalar value (e.g. C<--NAME-yaml '[foo, bar]'>). If this name conflicts with
+another existing option, a warning will be displayed and the option will not be
+added. YAML can express a larger set of values, e.g. binary data, circular
+references, etc.
+
+Will produce a hash (Getopt::Long spec), with C<func.specmeta> and C<func.opts>
+that contain extra information (C<func.specmeta> is a hash of getopt spec name
+and a hash of extra information while C<func.opts> lists all used option names).
+For example this is a complete response:
+
+    [200, "OK",
+     # Getopt::Long spec
+     {"help|h"     => sub { ... }, # this is simply taken from 'common_opts'
+      "version"    => sub { ... }, # ditto
+      "str-arg=s"  => sub { ... }, # from arg 'str_arg'
+      "ary-arg=s"  => sub { ... }, # from arg 'ary_arg'
+      "ary-arg-json=s" => sub { ... },
+      "ary-arg-yaml=s" => sub { ... }},
+     # result metadata
+     {
+       # extra information
+       "func.specmeta" => {
+           "help|h"    => {arg=>undef},
+           "version"   => {arg=>undef},
+           "str-arg=s" => {arg=>'str_arg'},
+           "ary-arg=s" => {arg=>'ary_arg'},
+           "ary-arg-json=s" => {arg=>'ary_arg', is_json=>1},
+           "ary-arg-yaml=s" => {arg=>'ary_arg', is_yaml=>1},
+       },
+       "func.opts" => ['help','h','version','str-arg','ary-arg','ary-arg-json','ary-arg-yaml'],
+     }]
+
+Arguments ('*' denotes required arguments):
+
+=over 4
+
+=item * B<args> => I<hash>
+
+Reference to hash which will store the result.
+
+=item * B<common_opts> => I<hash>
+
+A hash of Getopt::Long option specificationsand handlers.
+
+This argument is used to specify common options.
+
+=item * B<meta>* => I<hash>
+
+Rinci function metadata.
+
+=item * B<per_arg_json> => I<bool> (default: 0)
+
+Whether to add --NAME-json for non-simple arguments.
+
+Will also interpret command-line arguments as JSON if assigned to function
+arguments, if arguments' schema is not simple scalar.
+
+=item * B<per_arg_yaml> => I<bool> (default: 0)
+
+Whether to add --NAME-yaml for non-simple arguments.
+
+Will also interpret command-line arguments as YAML if assigned to function
+arguments, if arguments' schema is not simple scalar.
+
+=back
+
+Return value:
+
+Returns an enveloped result (an array).
+
+First element (status) is an integer containing HTTP status code
+(200 means OK, 4xx caller error, 5xx function error). Second element
+(msg) is a string containing error message, or 'OK' if status is
+200. Third element (result) is optional, the actual result. Fourth
+element (meta) is called result metadata and is optional, a hash
+that contains extra information.
+
+
 =head2 get_args_from_argv(%args) -> [status, msg, result, meta]
 
 Get subroutine arguments (%args) from command-line arguments (@ARGV).
 
-Using information in function metadata's 'args' property, parse command line
-arguments '@argv' into hash '%args', suitable for passing into subs.
+Using information in Rinci function metadata's C<args> property, parse command
+line arguments C<@argv> into hash C<%args>, suitable for passing into subroutines.
 
 Currently uses Getopt::Long's GetOptions to do the parsing.
 
-As with GetOptions, this function modifies its 'argv' argument.
+As with GetOptions, this function modifies its C<argv> argument, so you might
+want to copy the original C<argv> first (or pass a copy instead) if you want to
+preserve the original.
 
-Why would one use this function instead of using Getopt::Long directly? Among
-other reasons, we want to be able to parse complex types.
-
-This function exists mostly to support command-line options parsing for
-Perinci::CmdLine. See its documentation, on the section of command-line
-options/argument parsing.
+See also: genI<getopt>longI<spec>from_meta() which is the routine that generates
+the specification.
 
 Arguments ('*' denotes required arguments):
 
@@ -670,35 +867,11 @@ This option will be passed to Perinci::Sub::GetArgs::Array's allowI<extra>elems.
 
 If not specified, defaults to @ARGV
 
-=item * B<check_required_args> => I<bool> (default: 1)
+=item * B<common_opts> => I<hash>
 
-Whether to check required arguments.
+Specify common options.
 
-If set to true, will check that required arguments (those with req=>1) have been
-specified. Normally you want this, but Perinci::CmdLine turns this off so users
-can run --help even when arguments are incomplete.
-
-=item * B<extra_getopts_after> => I<array>
-
-Specify extra Getopt::Long specification.
-
-Just like I<extra_getopts_before>, but the extra specification is put I<after>
-function arguments specification so extra options can override function
-arguments.
-
-=item * B<extra_getopts_before> => I<array>
-
-Specify extra Getopt::Long specification.
-
-If specified, insert extra Getopt::Long specification. This is used, for
-example, by Perinci::CmdLine::run() to add general options --help, --version,
---list, etc so it can mixed with spec arg options, for convenience.
-
-Since the extra specification is put at the front (before function arguments
-specification), the extra options will not be able to override function
-arguments (this is how Getopt::Long works). For example, if extra specification
-contains --help, and one of function arguments happens to be 'help', the extra
-specification won't have any effect.
+A hash of Getopt::Long option specifications and handlers.
 
 =item * B<meta>* => I<hash>
 
@@ -720,8 +893,7 @@ arguments: (arg => $theI<missing>argumentI<name, args =>
 $the>resultingI<args>soI<far, spec => $the>arg_spec).
 
 The hook can return true if it succeeds in making the missing situation
-resolved. In this case, the function won't complain about missing argument for
-the corresponding argument.
+resolved. In this case, the function will not report the argument as missing.
 
 =item * B<per_arg_json> => I<bool> (default: 0)
 
@@ -753,8 +925,8 @@ See also: perI<arg>json. You should enable just one instead of turning on both.
 
 Strict mode.
 
-If set to 0, will still return parsed argv even if there are parsing errors. If
-set to 1 (the default), will die upon error.
+If set to 0, will still return parsed argv even if there are parsing errors
+(reported by Getopt::Long). If set to 1 (the default), will die upon error.
 
 Normally you would want to use strict mode, for more error checking. Setting off
 strict is used by, for example, Perinci::Sub::Complete.
@@ -773,6 +945,11 @@ element (meta) is called result metadata and is optional, a hash
 that contains extra information.
 
 =head1 FAQ
+
+=head1 TODO
+
+Option to enable json/yaml for nullable simple scalar (to enable C<--str-json
+'~'>).
 
 =head1 SEE ALSO
 

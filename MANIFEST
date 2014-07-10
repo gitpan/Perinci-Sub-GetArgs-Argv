@@ -9,7 +9,8 @@ README
 dist.ini
 lib/Perinci/Sub/GetArgs/Argv.pm
 t/00-compile.t
-t/01-basics.t
+t/gen_getopt_long_spec_from_meta.t
+t/get_args_from_argv.t
 t/release-pod-coverage.t
 t/release-pod-syntax.t
 t/release-rinci.t
