@@ -486,8 +486,54 @@ test_getargs(meta=>$meta, argv=>[qw/-X=foo/],
     );
 }
 
+subtest 'args option' => sub {
+    my $meta = {
+        v => 1.1,
+        args => {
+            a => {schema => 'str*', req=>1},
+            b => {schema => 'str*'},
+        },
+    };
+
+    test_getargs(
+        meta       => $meta,
+        argv       => [qw//],
+        args       => {},
+        name       => 'no preset args -> missing',
+        posttest   => sub {
+            my $res = shift;
+            is_deeply($res->[3]{'func.missing_args'}, ['a']);
+        },
+    );
+    test_getargs(
+        meta       => $meta,
+        argv       => [qw//],
+        input_args => {a=>1},
+        args       => {a=>1},
+        name       => 'arg a is preset -> ok',
+        posttest   => sub {
+            my $res = shift;
+            is_deeply($res->[3]{'func.missing_args'}, []);
+        },
+    );
+    test_getargs(
+        meta       => $meta,
+        argv       => [qw//],
+        input_args => {a=>1, b=>2, d=>4},
+        args       => {a=>1, b=>2, d=>4},
+        name       => 'unknown arg in input args is ok',
+    );
+    test_getargs(
+        meta       => $meta,
+        argv       => [qw/-a 10/],
+        input_args => {a=>1, b=>2, d=>4},
+        args       => {a=>10, b=>2, d=>4},
+        name       => 'argv overrides input args',
+    );
+};
+
 DONE_TESTING:
-done_testing();
+done_testing;
 
 sub test_getargs {
     my (%args) = @_;
@@ -497,7 +543,9 @@ sub test_getargs {
     subtest $name => sub {
         my $argv = clone($args{argv});
         my $res;
-        my %input_args = (argv=>$argv, meta=>$args{meta});
+        my $input_args = { %{ $args{input_args} } } if $args{input_args};
+        my %input_args = (argv=>$argv, meta=>$args{meta},
+                          args=>$input_args);
         for (qw/strict
                 common_opts
                 per_arg_json per_arg_yaml

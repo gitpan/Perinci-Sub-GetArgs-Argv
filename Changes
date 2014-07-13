@@ -1,5 +1,10 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.38     2014-07-12 (SHARYANTO)
+
+         - Add option: 'args', to set initial value for the resulting arguments.
+
+
 0.37     2014-07-09 (SHARYANTO)
 
          [INCOMPATIBLE CHANGES]

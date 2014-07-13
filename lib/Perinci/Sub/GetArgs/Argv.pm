@@ -17,8 +17,8 @@ our @EXPORT_OK = qw(
                        get_args_from_argv
                );
 
-our $DATE = '2014-07-10'; # DATE
-our $VERSION = '0.37'; # VERSION
+our $DATE = '2014-07-12'; # DATE
+our $VERSION = '0.38'; # VERSION
 
 our %SPEC;
 
@@ -101,11 +101,12 @@ that is).
 
 Each command-line alias (`cmdline_aliases` property) in the argument
 specification will also be added as command-line option, except if it clashes
-with an existing option, in which case the function will warn and skip adding
+with an existing option, in which case this function will warn and skip adding
 the alias. For more information about `cmdline_aliases`, see `Rinci::function`.
 
-For arguments with type of `bool`, Getopt::Long will by default also add
-`--noNAME` in addition to `--name`.
+For arguments with type of `bool`, Getopt::Long will by default also
+automatically recognize `--noNAME` or `--no-NAME` in addition to `--name`. So
+this function will also check those names for clashes.
 
 For arguments with type array of simple scalar, `--NAME` can be specified more
 than once to append to the array.
@@ -418,6 +419,10 @@ _
             }],
             description => 'If not specified, defaults to @ARGV',
         },
+        args => {
+            summary => 'Specify input args, with some arguments preset',
+            schema  => ['hash'],
+        },
         meta => {
             schema => ['hash*' => {}],
             req => 1,
@@ -488,7 +493,7 @@ _
             description => <<'_',
 
 If set to 1, then if there are array elements unassigned to one of the
-arguments, instead of generating an error, the function will just ignore them.
+arguments, instead of generating an error, this function will just ignore them.
 
 This option will be passed to Perinci::Sub::GetArgs::Array's allow_extra_elems.
 
@@ -509,7 +514,7 @@ arguments: (arg => $the_missing_argument_name, args =>
 $the_resulting_args_so_far, spec => $the_arg_spec).
 
 The hook can return true if it succeeds in making the missing situation
-resolved. In this case, the function will not report the argument as missing.
+resolved. In this case, this function will not report the argument as missing.
 
 _
         },
@@ -549,7 +554,7 @@ sub get_args_from_argv {
     #$log->tracef("-> get_args_from_argv(), argv=%s", $argv);
 
     # to store the resulting args
-    my $rargs = {};
+    my $rargs = $fargs{args} // {};
 
     # 1. first we generate Getopt::Long spec
     my $res = gen_getopt_long_spec_from_meta(
@@ -700,7 +705,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-This document describes version 0.37 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-07-10.
+This document describes version 0.38 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-07-12.
 
 =head1 SYNOPSIS
 
@@ -737,11 +742,12 @@ that is).
 
 Each command-line alias (C<cmdline_aliases> property) in the argument
 specification will also be added as command-line option, except if it clashes
-with an existing option, in which case the function will warn and skip adding
+with an existing option, in which case this function will warn and skip adding
 the alias. For more information about C<cmdline_aliases>, see C<Rinci::function>.
 
-For arguments with type of C<bool>, Getopt::Long will by default also add
-C<--noNAME> in addition to C<--name>.
+For arguments with type of C<bool>, Getopt::Long will by default also
+automatically recognize C<--noNAME> or C<--no-NAME> in addition to C<--name>. So
+this function will also check those names for clashes.
 
 For arguments with type array of simple scalar, C<--NAME> can be specified more
 than once to append to the array.
@@ -859,9 +865,13 @@ Arguments ('*' denotes required arguments):
 Allow extra/unassigned elements in argv.
 
 If set to 1, then if there are array elements unassigned to one of the
-arguments, instead of generating an error, the function will just ignore them.
+arguments, instead of generating an error, this function will just ignore them.
 
 This option will be passed to Perinci::Sub::GetArgs::Array's allowI<extra>elems.
+
+=item * B<args> => I<hash>
+
+Specify input args, with some arguments preset.
 
 =item * B<argv> => I<array>
 
@@ -893,7 +903,7 @@ arguments: (arg => $theI<missing>argumentI<name, args =>
 $the>resultingI<args>soI<far, spec => $the>arg_spec).
 
 The hook can return true if it succeeds in making the missing situation
-resolved. In this case, the function will not report the argument as missing.
+resolved. In this case, this function will not report the argument as missing.
 
 =item * B<per_arg_json> => I<bool> (default: 0)
 
