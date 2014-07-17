@@ -17,8 +17,8 @@ our @EXPORT_OK = qw(
                        get_args_from_argv
                );
 
-our $DATE = '2014-07-12'; # DATE
-our $VERSION = '0.38'; # VERSION
+our $DATE = '2014-07-17'; # DATE
+our $VERSION = '0.39'; # VERSION
 
 our %SPEC;
 
@@ -570,11 +570,11 @@ sub get_args_from_argv {
 
     # 2. then we run GetOptions to fill $rargs from command-line opts
     #$log->tracef("GetOptions spec: %s", \@go_spec);
-    my $old_go_opts = Getopt::Long::Configure(
+    my $old_go_conf = Getopt::Long::Configure(
         $strict ? "no_pass_through" : "pass_through",
         "no_ignore_case", "permute", "bundling", "no_getopt_compat");
     my $result = Getopt::Long::GetOptionsFromArray($argv, %$go_spec);
-    Getopt::Long::Configure($old_go_opts);
+    Getopt::Long::Configure($old_go_conf);
     unless ($result) {
         return [500, "GetOptions failed"] if $strict;
     }
@@ -610,41 +610,55 @@ sub get_args_from_argv {
                     $cs->{of} && $cs->{of}[0] =~ $re_simple_scalar;
 
                 if ($as->{greedy} && ref($val) eq 'ARRAY') {
-                    # try parsing each element as JSON/YAML
                     my $i = 0;
                     for (@$val) {
+                      TRY_PARSING_AS_JSON_YAML:
                         {
                             my ($success, $e, $decoded);
-                            ($success, $e, $decoded) = _parse_json($_);
-                            if ($success) {
-                                $_ = $decoded;
-                                last;
+                            if ($per_arg_json) {
+                                ($success, $e, $decoded) = _parse_json($_);
+                                if ($success) {
+                                    $_ = $decoded;
+                                    last TRY_PARSING_AS_JSON_YAML;
+                                } else {
+                                    warn "Failed trying to parse argv #$i as JSON: $e";
+                                }
                             }
-                            ($success, $e, $decoded) = _parse_yaml($_);
-                            if ($success) {
-                                $_ = $decoded;
-                                last;
+                            if ($per_arg_yaml) {
+                                ($success, $e, $decoded) = _parse_yaml($_);
+                                if ($success) {
+                                    $_ = $decoded;
+                                    last TRY_PARSING_AS_JSON_YAML;
+                                } else {
+                                    warn "Failed trying to parse argv #$i as YAML: $e";
+                                }
                             }
-                            die "Invalid JSON/YAML in #$as->{pos}\[$i]";
                         }
                         $i++;
                     }
                 }
                 if (!$as->{greedy} && !$is_simple_scalar) {
-                    # try parsing as JSON/YAML
-                    my ($success, $e, $decoded);
-                    ($success, $e, $decoded) = _parse_json($val);
+                  TRY_PARSING_AS_JSON_YAML:
                     {
-                        if ($success) {
-                            $val = $decoded;
-                            last;
+                        my ($success, $e, $decoded);
+                        if ($per_arg_json) {
+                            ($success, $e, $decoded) = _parse_json($val);
+                            if ($success) {
+                                $val = $decoded;
+                                last TRY_PARSING_AS_JSON_YAML;
+                            } else {
+                                warn "Failed trying to parse argv #$as->{pos} as JSON: $e";
+                            }
                         }
-                        ($success, $e, $decoded) = _parse_yaml($val);
-                        if ($success) {
-                            $val = $decoded;
-                            last;
+                        if ($per_arg_yaml) {
+                            ($success, $e, $decoded) = _parse_yaml($val);
+                            if ($success) {
+                                $val = $decoded;
+                                last TRY_PARSING_AS_JSON_YAML;
+                            } else {
+                                warn "Failed trying to parse argv #$as->{pos} as YAML: $e";
+                            }
                         }
-                        die "Invalid JSON/YAML in #$as->{pos}";
                     }
                 }
                 $rargs->{$name} = $val;
@@ -705,7 +719,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-This document describes version 0.38 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-07-12.
+This document describes version 0.39 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-07-17.
 
 =head1 SYNOPSIS
 

@@ -82,6 +82,7 @@ test_getargs(meta=>$meta, argv=>['--arg1', '{"foo": false}',
         },
     };
     test_getargs(meta=>$meta, argv=>['[foo]'],
+                 per_arg_json=>1, per_arg_yaml=>1,
                  args=>{arg1=>['foo']},
                  name=>"nonscalar argv, yaml/json parsing");
 
@@ -92,6 +93,7 @@ test_getargs(meta=>$meta, argv=>['--arg1', '{"foo": false}',
         },
     };
     test_getargs(meta=>$meta, argv=>['[foo]'],
+                 per_arg_json=>1, per_arg_yaml=>1,
                  args=>{arg1=>[['foo']]},
                  name=>"nonscalar argv, yaml/json parsing, greedy");
 }
@@ -552,6 +554,7 @@ sub test_getargs {
                 allow_extra_elems on_missing_required_args/) {
             $input_args{$_} = $args{$_} if defined $args{$_};
         }
+        #diag explain \%input_args;
         $res = get_args_from_argv(%input_args);
         if ($args{status}) {
             is($res->[0], $args{status}, "status")
@@ -566,7 +569,7 @@ sub test_getargs {
         }
         if ($args{args}) {
             is_deeply($res->[2], $args{args}, "result")
-                or diag explain $res->[2];
+                or diag explain $res;
         }
         if ($args{remaining_argv}) {
             is_deeply($argv, $args{remaining_argv}, "remaining argv")
