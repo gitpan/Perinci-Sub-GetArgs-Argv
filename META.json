@@ -64,7 +64,7 @@
          "web" : "https://github.com/sharyanto/perl-Perinci-Sub-GetArgs-Argv"
       }
    },
-   "version" : "0.43",
+   "version" : "0.44",
    "x_Dist_Zilla" : {
       "perl" : {
          "version" : "5.018002"

@@ -1,5 +1,22 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.44     2014-07-18 (SHARYANTO)
+
+         - These changes are to aid completion.
+
+         - gen_getopt_long_spec_from_meta(): Provide 'func.opts_by_arg',
+           'func.opts_by_common', 'func.common_opts' & 'func.func_opts'.
+
+         - get_args_from_argv(): Return gen_getopt_long_spec_from_meta result in
+           func.gen_getopt_long_spec_result to avoid caller having to call
+           gen_getopt_long_spec_from_meta() separately.
+
+         [INCOMPATIBLE CHANGES]
+
+         - gen_getopt_long_spec_from_meta(): func.*opts are now prefixed with
+           --/-.
+
+
 0.43     2014-07-18 (SHARYANTO)
 
          - gen_getopt_long_spec_from_meta(): Add 'parsed' key (result from

@@ -18,7 +18,7 @@ our @EXPORT_OK = qw(
                );
 
 our $DATE = '2014-07-18'; # DATE
-our $VERSION = '0.43'; # VERSION
+our $VERSION = '0.44'; # VERSION
 
 our %SPEC;
 
@@ -126,32 +126,10 @@ another existing option, a warning will be displayed and the option will not be
 added. YAML can express a larger set of values, e.g. binary data, circular
 references, etc.
 
-Will produce a hash (Getopt::Long spec), with `func.specmeta` and `func.opts`
-that contain extra information (`func.specmeta` is a hash of getopt spec name
-and a hash of extra information while `func.opts` lists all used option names).
-For example this is a complete response:
-
-    [200, "OK",
-     # Getopt::Long spec
-     {"help|h"     => sub { ... }, # this is simply taken from 'common_opts'
-      "version"    => sub { ... }, # ditto
-      "str-arg=s"  => sub { ... }, # from arg 'str_arg'
-      "ary-arg=s"  => sub { ... }, # from arg 'ary_arg'
-      "ary-arg-json=s" => sub { ... },
-      "ary-arg-yaml=s" => sub { ... }},
-     # result metadata
-     {
-       # extra information
-       "func.specmeta" => {
-           "help|h"    => {arg=>undef},
-           "version"   => {arg=>undef},
-           "str-arg=s" => {arg=>'str_arg'},
-           "ary-arg=s" => {arg=>'ary_arg'},
-           "ary-arg-json=s" => {arg=>'ary_arg', is_json=>1},
-           "ary-arg-yaml=s" => {arg=>'ary_arg', is_yaml=>1},
-       },
-       "func.opts" => ['help','h','version','str-arg','ary-arg','ary-arg-json','ary-arg-yaml'],
-     }]
+Will produce a hash (Getopt::Long spec), with `func.specmeta`, `func.opts`,
+`func.common_opts`, `func.func_opts` that contain extra information
+(`func.specmeta` is a hash of getopt spec name and a hash of extra information
+while `func.*opts` lists all used option names).
 
 _
     args => {
@@ -206,7 +184,7 @@ sub gen_getopt_long_spec_from_meta {
         require Perinci::Sub::Normalize;
         $meta = Perinci::Sub::Normalize::normalize_function_metadata($meta);
     }
-    my $common_opts  = $fargs{common_opts} // {};
+    my $co           = $fargs{common_opts} // {};
     my $per_arg_yaml = $fargs{per_arg_yaml} // 0;
     my $per_arg_json = $fargs{per_arg_json} // 0;
     my $rargs        = $fargs{args} // {};
@@ -214,18 +192,20 @@ sub gen_getopt_long_spec_from_meta {
     my %go_spec;
     my %specmeta; # key = option spec, val = hash of extra info
     my %seen_opts;
+    my %seen_common_opts;
+    my %seen_func_opts;
 
-    for my $ospec (keys %$common_opts) {
+    for my $ospec (keys %$co) {
         my $res = parse_getopt_long_opt_spec($ospec)
             or return [400, "Can't parse common opt spec '$ospec'"];
-        $go_spec{ $res->{normalized} } = $common_opts->{$ospec};
+        $go_spec{ $res->{normalized} } = $co->{$ospec};
         $specmeta{ $res->{normalized} } = {arg=>undef, orig_spec=>$ospec, parsed=>$res};
         for (@{ $res->{opts} }) {
             return [412, "Clash of common opt '$_'"] if $seen_opts{$_};
-            $seen_opts{$_}++;
+            $seen_opts{$_}++; $seen_common_opts{$_} = $ospec;
             if ($res->{is_neg}) {
-                $seen_opts{"no$_"}++;
-                $seen_opts{"no-$_"}++;
+                $seen_opts{"no$_"}++; $seen_common_opts{"no$_"} = $ospec;
+                $seen_opts{"no-$_"}++; $seen_common_opts{"no-$_"} = $ospec;
             }
         }
     }
@@ -303,10 +283,10 @@ sub gen_getopt_long_spec_from_meta {
         }; # handler
         $go_spec{$ospec} = $handler;
         $specmeta{$ospec} = {arg=>$arg, parsed=>$parsed};
-        $seen_opts{$opt}++;
+        $seen_opts{$opt}++; $seen_func_opts{$opt} = $arg;
         if ($parsed->{is_neg}) {
-            $seen_opts{"no$opt"}++;
-            $seen_opts{"no-$opt"}++;
+            $seen_opts{"no$opt"}++; $seen_func_opts{"no$opt"} = $arg;
+            $seen_opts{"no-$opt"}++; $seen_func_opts{"no-$opt"} = $arg;
         }
 
         if ($per_arg_json && $type !~ $re_simple_scalar) {
@@ -326,7 +306,7 @@ sub gen_getopt_long_spec_from_meta {
                 };
                 my $parsed = parse_getopt_long_opt_spec($jospec);
                 $specmeta{$jospec} = {arg=>$arg, is_json=>1,  parsed=>$parsed};
-                $seen_opts{$jopt}++;
+                $seen_opts{$jopt}++; $seen_func_opts{$jopt} = $arg;
             }
         }
         if ($per_arg_yaml && $type !~ $re_simple_scalar) {
@@ -346,7 +326,7 @@ sub gen_getopt_long_spec_from_meta {
                 };
                 my $parsed = parse_getopt_long_opt_spec($yospec);
                 $specmeta{$yospec} = {arg=>$arg, is_yaml=>1, parsed=>$parsed};
-                $seen_opts{$yopt}++;
+                $seen_opts{$yopt}++; $seen_func_opts{$yopt} = $arg;
             }
         }
 
@@ -394,19 +374,47 @@ sub gen_getopt_long_spec_from_meta {
                 };
                 push @{$specmeta{$ospec}{($alcode ? '':'non').'code_aliases'}},
                     $alospec;
-                $seen_opts{$alopt}++;
+                $seen_opts{$alopt}++; $seen_func_opts{$alopt} = $arg;
                 if ($parsed->{is_neg}) {
-                    $seen_opts{"no$alopt"}++;
-                    $seen_opts{"no-$alopt"}++;
+                    $seen_opts{"no$alopt"}++; $seen_func_opts{"no$alopt"} = $arg;
+                    $seen_opts{"no-$alopt"}++; $seen_func_opts{"no-$alopt"} = $arg;
                 }
             }
         }
 
     } # for arg
 
+    my $opts        = [sort(map {length($_)>1 ? "--$_":"-$_"} keys %seen_opts)];
+    my $common_opts = [sort(map {length($_)>1 ? "--$_":"-$_"} keys %seen_common_opts)];
+    my $func_opts   = [sort(map {length($_)>1 ? "--$_":"-$_"} keys %seen_func_opts)];
+    my $opts_by_common = {};
+    for my $k (keys %$co) {
+        my @opts;
+        for (keys %seen_common_opts) {
+            next unless $seen_common_opts{$_} eq $k;
+            push @opts, (length($_)>1 ? "--$_":"-$_");
+        }
+        $opts_by_common->{$k} = [sort @opts];
+    }
+    my $opts_by_arg = {};
+    for my $arg (keys %$args_p) {
+        my @opts;
+        for (keys %seen_func_opts) {
+            next unless $seen_func_opts{$_} eq $arg;
+            push @opts, (length($_)>1 ? "--$_":"-$_");
+        }
+        $opts_by_arg->{$arg} = [sort @opts];
+    }
+
     [200, "OK", \%go_spec,
-     {"func.specmeta" => \%specmeta,
-      "func.opts" => [sort keys %seen_opts]}];
+     {
+         "func.specmeta"       => \%specmeta,
+         "func.opts"           => $opts,
+         "func.common_opts"    => $common_opts,
+         "func.func_opts"      => $func_opts,
+         "func.opts_by_arg"    => $opts_by_arg,
+         "func.opts_by_common" => $opts_by_common,
+     }];
 }
 
 $SPEC{get_args_from_argv} = {
@@ -573,26 +581,28 @@ sub get_args_from_argv {
     my $rargs = $fargs{args} // {};
 
     # 1. first we generate Getopt::Long spec
-    my $res = gen_getopt_long_spec_from_meta(
+    my $genres = gen_getopt_long_spec_from_meta(
         meta => $meta, meta_is_normalized => 1,
         args => $rargs,
         common_opts  => $common_opts,
         per_arg_json => $per_arg_json,
         per_arg_yaml => $per_arg_yaml,
     );
-    return err($res->[0], "Can't generate Getopt::Long spec", $res)
-        if $res->[0] != 200;
-    my $go_spec = $res->[2];
+    return err($genres->[0], "Can't generate Getopt::Long spec", $genres)
+        if $genres->[0] != 200;
+    my $go_spec = $genres->[2];
 
     # 2. then we run GetOptions to fill $rargs from command-line opts
     #$log->tracef("GetOptions spec: %s", \@go_spec);
-    my $old_go_conf = Getopt::Long::Configure(
-        $strict ? "no_pass_through" : "pass_through",
-        "no_ignore_case", "permute", "bundling", "no_getopt_compat");
-    my $result = Getopt::Long::GetOptionsFromArray($argv, %$go_spec);
-    Getopt::Long::Configure($old_go_conf);
-    unless ($result) {
-        return [500, "GetOptions failed"] if $strict;
+    {
+        my $old_go_conf = Getopt::Long::Configure(
+            $strict ? "no_pass_through" : "pass_through",
+            "no_ignore_case", "permute", "bundling", "no_getopt_compat");
+        my $res = Getopt::Long::GetOptionsFromArray($argv, %$go_spec);
+        Getopt::Long::Configure($old_go_conf);
+        unless ($res) {
+            return [500, "GetOptions failed"] if $strict;
+        }
     }
 
     # 3. then we try to fill $rargs from remaining command-line arguments (for
@@ -716,7 +726,7 @@ sub get_args_from_argv {
     #             $rargs, $argv);
     [200, "OK", $rargs, {
         "func.missing_args" => [sort keys %missing_args],
-        # TODO: return gen_getopt_long_spec_from_meta() result if needed
+        "func.gen_getopt_long_spec_result" => $genres,
     }];
 }
 
@@ -735,7 +745,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-This document describes version 0.43 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-07-18.
+This document describes version 0.44 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-07-18.
 
 =head1 SYNOPSIS
 
@@ -797,32 +807,10 @@ another existing option, a warning will be displayed and the option will not be
 added. YAML can express a larger set of values, e.g. binary data, circular
 references, etc.
 
-Will produce a hash (Getopt::Long spec), with C<func.specmeta> and C<func.opts>
-that contain extra information (C<func.specmeta> is a hash of getopt spec name
-and a hash of extra information while C<func.opts> lists all used option names).
-For example this is a complete response:
-
-    [200, "OK",
-     # Getopt::Long spec
-     {"help|h"     => sub { ... }, # this is simply taken from 'common_opts'
-      "version"    => sub { ... }, # ditto
-      "str-arg=s"  => sub { ... }, # from arg 'str_arg'
-      "ary-arg=s"  => sub { ... }, # from arg 'ary_arg'
-      "ary-arg-json=s" => sub { ... },
-      "ary-arg-yaml=s" => sub { ... }},
-     # result metadata
-     {
-       # extra information
-       "func.specmeta" => {
-           "help|h"    => {arg=>undef},
-           "version"   => {arg=>undef},
-           "str-arg=s" => {arg=>'str_arg'},
-           "ary-arg=s" => {arg=>'ary_arg'},
-           "ary-arg-json=s" => {arg=>'ary_arg', is_json=>1},
-           "ary-arg-yaml=s" => {arg=>'ary_arg', is_yaml=>1},
-       },
-       "func.opts" => ['help','h','version','str-arg','ary-arg','ary-arg-json','ary-arg-yaml'],
-     }]
+Will produce a hash (Getopt::Long spec), with C<func.specmeta>, C<func.opts>,
+C<func.common_opts>, C<func.func_opts> that contain extra information
+(C<func.specmeta> is a hash of getopt spec name and a hash of extra information
+while C<func.*opts> lists all used option names).
 
 Arguments ('*' denotes required arguments):
 
