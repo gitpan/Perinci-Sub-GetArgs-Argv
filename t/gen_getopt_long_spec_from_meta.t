@@ -62,11 +62,11 @@ my $expected_res = [
     },
     {
         'func.specmeta' => {
-            'h|help|?' => {arg=>undef,},
-            'v|version' => {arg=>undef,},
-            'verbose!' => {arg=>undef},
-            'format=s' => {arg=>undef,},
-            'format-options=s' => {arg=>undef,},
+            'h|help|?' => {arg=>undef, orig_spec=>'help|h|?'},
+            'v|version' => {arg=>undef, orig_spec=>'version|v'},
+            'verbose!' => {arg=>undef, orig_spec=>'verbose!'},
+            'format=s' => {arg=>undef, orig_spec=>'format=s'},
+            'format-options=s' => {arg=>undef, orig_spec=>'format-options=s'},
             'str-arg1=s' => {arg=>'str_arg1',},
             'ary-arg1=s' => {arg=>'ary.arg1',},
             'ary-arg1-json=s' => {arg=>'ary.arg1', is_json=>1},

@@ -1,5 +1,12 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.42     2014-07-18 (SHARYANTO)
+
+         - gen_getopt_long_spec_from_meta(): Add 'orig_spec' to common_opts'
+           alias specmeta to be able to trace back the original key (to aid
+           help/usage generation).
+
+
 0.41     2014-07-18 (SHARYANTO)
 
          - gen_getopt_long_spec_from_meta(): Add is_alias to alias specmeta, add
