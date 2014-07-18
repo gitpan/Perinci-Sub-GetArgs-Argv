@@ -18,7 +18,7 @@ our @EXPORT_OK = qw(
                );
 
 our $DATE = '2014-07-18'; # DATE
-our $VERSION = '0.40'; # VERSION
+our $VERSION = '0.41'; # VERSION
 
 our %SPEC;
 
@@ -215,10 +215,10 @@ sub gen_getopt_long_spec_from_meta {
     my %specmeta; # key = option spec, val = hash of extra info
     my %seen_opts;
 
-    for my $os (keys %$common_opts) {
-        my $res = parse_getopt_long_opt_spec($os)
-            or return [400, "Can't parse common opt spec '$os'"];
-        $go_spec{ $res->{normalized} } = $common_opts->{$os};
+    for my $ospec (keys %$common_opts) {
+        my $res = parse_getopt_long_opt_spec($ospec)
+            or return [400, "Can't parse common opt spec '$ospec'"];
+        $go_spec{ $res->{normalized} } = $common_opts->{$ospec};
         $specmeta{ $res->{normalized} } = {arg=>undef};
         for (@{ $res->{opts} }) {
             return [412, "Clash of common opt '$_'"] if $seen_opts{$_};
@@ -381,7 +381,13 @@ sub gen_getopt_long_spec_from_meta {
                     $go_spec{$alospec} = $handler;
                 }
                 $specmeta{$alospec} = {
-                    arg=>$arg, alias=>$al, is_code=>$alcode ? 1:0};
+                    alias    => $al,
+                    is_alias => 1,
+                    arg      => $arg,
+                    is_code  => $alcode ? 1:0,
+                };
+                push @{$specmeta{$ospec}{($alcode ? '':'non').'code_aliases'}},
+                    $alospec;
                 $seen_opts{$alopt}++;
             }
         }
@@ -719,7 +725,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-This document describes version 0.40 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-07-18.
+This document describes version 0.41 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-07-18.
 
 =head1 SYNOPSIS
 
@@ -853,6 +859,8 @@ First element (status) is an integer containing HTTP status code
 element (meta) is called result metadata and is optional, a hash
 that contains extra information.
 
+ (any)
+
 
 =head2 get_args_from_argv(%args) -> [status, msg, result, meta]
 
@@ -967,6 +975,18 @@ First element (status) is an integer containing HTTP status code
 200. Third element (result) is optional, the actual result. Fourth
 element (meta) is called result metadata and is optional, a hash
 that contains extra information.
+
+ (any)
+
+Error codes:
+
+* 400 - Error in Getopt::Long option specification, e.g. in common_opts.
+
+* 500 - failure in GetOptions, meaning argv is not valid according to metadata
+  specification (only if 'strict' mode is enabled).
+
+* 502 - coderef in cmdline_aliases got converted into a string, probably because
+  the metadata was transported (e.g. through Riap::HTTP/Riap::Simple).
 
 =head1 FAQ
 

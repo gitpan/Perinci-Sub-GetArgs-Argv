@@ -1,5 +1,12 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.41     2014-07-18 (SHARYANTO)
+
+         - gen_getopt_long_spec_from_meta(): Add is_alias to alias specmeta, add
+           {,non}code_aliases to non-alias specmeta (to aid help/usage
+           generation).
+
+
 0.40     2014-07-18 (SHARYANTO)
 
          - No functional changes.

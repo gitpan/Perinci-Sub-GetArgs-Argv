@@ -3,7 +3,7 @@ NAME
     arguments (@ARGV)
 
 VERSION
-    This document describes version 0.40 of Perinci::Sub::GetArgs::Argv
+    This document describes version 0.41 of Perinci::Sub::GetArgs::Argv
     (from Perl distribution Perinci-Sub-GetArgs-Argv), released on
     2014-07-18.
 
@@ -132,6 +132,8 @@ FUNCTIONS
     is called result metadata and is optional, a hash that contains extra
     information.
 
+     (any)
+
   get_args_from_argv(%args) -> [status, msg, result, meta]
     Get subroutine arguments (%args) from command-line arguments (@ARGV).
 
@@ -249,6 +251,19 @@ FUNCTIONS
     element (result) is optional, the actual result. Fourth element (meta)
     is called result metadata and is optional, a hash that contains extra
     information.
+
+     (any)
+
+    Error codes:
+
+    * 400 - Error in Getopt::Long option specification, e.g. in common_opts.
+
+    * 500 - failure in GetOptions, meaning argv is not valid according to
+    metadata specification (only if 'strict' mode is enabled).
+
+    * 502 - coderef in cmdline_aliases got converted into a string, probably
+    because the metadata was transported (e.g. through
+    Riap::HTTP/Riap::Simple).
 
 FAQ
 TODO
