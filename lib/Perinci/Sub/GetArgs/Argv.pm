@@ -18,7 +18,7 @@ our @EXPORT_OK = qw(
                );
 
 our $DATE = '2014-07-18'; # DATE
-our $VERSION = '0.42'; # VERSION
+our $VERSION = '0.43'; # VERSION
 
 our %SPEC;
 
@@ -219,7 +219,7 @@ sub gen_getopt_long_spec_from_meta {
         my $res = parse_getopt_long_opt_spec($ospec)
             or return [400, "Can't parse common opt spec '$ospec'"];
         $go_spec{ $res->{normalized} } = $common_opts->{$ospec};
-        $specmeta{ $res->{normalized} } = {arg=>undef, orig_spec=>$ospec};
+        $specmeta{ $res->{normalized} } = {arg=>undef, orig_spec=>$ospec, parsed=>$res};
         for (@{ $res->{opts} }) {
             return [412, "Clash of common opt '$_'"] if $seen_opts{$_};
             $seen_opts{$_}++;
@@ -254,6 +254,7 @@ sub gen_getopt_long_spec_from_meta {
         }
 
         my $ospec = _opt2ospec($opt, $sch);
+        my $parsed = parse_getopt_long_opt_spec($ospec);
         my $is_simple_scalar = $type =~ $re_simple_scalar;
         my $is_array_of_simple_scalar = $type eq 'array' &&
             $cs->{of} && $cs->{of}[0] =~ $re_simple_scalar;
@@ -301,9 +302,9 @@ sub gen_getopt_long_spec_from_meta {
             }
         }; # handler
         $go_spec{$ospec} = $handler;
-        $specmeta{$ospec} = {arg=>$arg};
+        $specmeta{$ospec} = {arg=>$arg, parsed=>$parsed};
         $seen_opts{$opt}++;
-        if ($type eq 'bool' && !defined($cs->{is})) {
+        if ($parsed->{is_neg}) {
             $seen_opts{"no$opt"}++;
             $seen_opts{"no-$opt"}++;
         }
@@ -323,7 +324,8 @@ sub gen_getopt_long_spec_from_meta {
                         die "Invalid JSON in option --$jopt: $_[1]: $e";
                     }
                 };
-                $specmeta{$jospec} = {arg=>$arg, is_json=>1};
+                my $parsed = parse_getopt_long_opt_spec($jospec);
+                $specmeta{$jospec} = {arg=>$arg, is_json=>1,  parsed=>$parsed};
                 $seen_opts{$jopt}++;
             }
         }
@@ -342,7 +344,8 @@ sub gen_getopt_long_spec_from_meta {
                         die "Invalid YAML in option --$yopt: $_[1]: $e";
                     }
                 };
-                $specmeta{$yospec} = {arg=>$arg, is_yaml=>1};
+                my $parsed = parse_getopt_long_opt_spec($yospec);
+                $specmeta{$yospec} = {arg=>$arg, is_yaml=>1, parsed=>$parsed};
                 $seen_opts{$yopt}++;
             }
         }
@@ -359,9 +362,9 @@ sub gen_getopt_long_spec_from_meta {
                 my $alsch = $alspec->{schema} // $sch;
                 my $alcode = $alspec->{code};
                 my $alospec;
-                if ($alcode && $type eq 'bool') {
+                if ($alcode && $alsch->[0] eq 'bool') {
                     # bool --alias doesn't get --noalias if has code
-                    $alospec = $al; # instead of "$al!"
+                    $alospec = $alopt; # instead of "$alopt!"
                 } else {
                     $alospec = _opt2ospec($alopt, $alsch);
                 }
@@ -380,15 +383,22 @@ sub gen_getopt_long_spec_from_meta {
                 } else {
                     $go_spec{$alospec} = $handler;
                 }
+                my $parsed = parse_getopt_long_opt_spec($alospec);
                 $specmeta{$alospec} = {
-                    alias    => $al,
-                    is_alias => 1,
-                    arg      => $arg,
-                    is_code  => $alcode ? 1:0,
+                    alias     => $al,
+                    is_alias  => 1,
+                    alias_for => $ospec,
+                    arg       => $arg,
+                    is_code   => $alcode ? 1:0,
+                    parsed    => $parsed,
                 };
                 push @{$specmeta{$ospec}{($alcode ? '':'non').'code_aliases'}},
                     $alospec;
                 $seen_opts{$alopt}++;
+                if ($parsed->{is_neg}) {
+                    $seen_opts{"no$alopt"}++;
+                    $seen_opts{"no-$alopt"}++;
+                }
             }
         }
 
@@ -725,7 +735,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-This document describes version 0.42 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-07-18.
+This document describes version 0.43 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-07-18.
 
 =head1 SYNOPSIS
 

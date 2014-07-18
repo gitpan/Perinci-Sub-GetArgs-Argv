@@ -1,5 +1,15 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.43     2014-07-18 (SHARYANTO)
+
+         - gen_getopt_long_spec_from_meta(): Add 'parsed' key (result from
+           Getopt::Long::Util's parse_getopt_long_opt_spec()). Add 'alias_for'
+           key for alias options to trace back original option. Both to aid
+           help/usage generation.
+
+         - [Bugfix] Some bug fixes.
+
+
 0.42     2014-07-18 (SHARYANTO)
 
          - gen_getopt_long_spec_from_meta(): Add 'orig_spec' to common_opts'

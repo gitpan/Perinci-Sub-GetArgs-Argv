@@ -16,8 +16,8 @@ my $meta = {
     args => {
         str_arg1   => {schema=>'str'},
         'ary.arg1' => {schema=>[array => of => 'str']},
-        float1     => {schema=>'float'},
-        int1       => {schema=>'int'},
+        float1     => {schema=>'float', cmdline_aliases=>{f=>{}}},
+        int1       => {schema=>'int', cmdline_aliases=>{set_zero=>{schema=>'bool', code=>sub{}}}},
         bool1      => {schema=>'bool'},
         help       => {schema=>['bool', is=>1]},
     },
@@ -43,6 +43,24 @@ my $res = gen_getopt_long_spec_from_meta(
 my $cleanser = Data::Clean::JSON->get_cleanser;
 $cleanser->clean_in_place($res);
 
+# strip parsed to keep things short
+{
+    my $sms = $res->[3]{'func.specmeta'};
+    for (keys %$sms) {
+        $sms->{$_}{parsed} = 'PARSED' if $sms->{$_}{parsed};
+    }
+}
+
+# due to random hash ordering, sometimes 'f=f' is processed first (and thus
+# 'float1=f' becomes CIRCULAR) and sometimes it's the other way around. so we
+# just change 'CIRCULAR' to 'CODE' here.
+{
+    my $res = $res->[2];
+    for (keys %$res) {
+        $res->{$_} = 'CODE' if $res->{$_} eq 'CIRCULAR';
+    }
+}
+
 my $expected_res = [
     200, "OK",
     {
@@ -55,26 +73,30 @@ my $expected_res = [
         'ary-arg1=s' => 'CODE',
         'ary-arg1-json=s' => 'CODE',
         'ary-arg1-yaml=s' => 'CODE',
+        'f=f' => 'CODE',
         'float1=f' => 'CODE',
         'int1=i' => 'CODE',
         'bool1!' => 'CODE',
+        'set-zero' => 'CODE', # XXX should be 'set-zero'
         'help-arg' => 'CODE',
     },
     {
         'func.specmeta' => {
-            'h|help|?' => {arg=>undef, orig_spec=>'help|h|?'},
-            'v|version' => {arg=>undef, orig_spec=>'version|v'},
-            'verbose!' => {arg=>undef, orig_spec=>'verbose!'},
-            'format=s' => {arg=>undef, orig_spec=>'format=s'},
-            'format-options=s' => {arg=>undef, orig_spec=>'format-options=s'},
-            'str-arg1=s' => {arg=>'str_arg1',},
-            'ary-arg1=s' => {arg=>'ary.arg1',},
-            'ary-arg1-json=s' => {arg=>'ary.arg1', is_json=>1},
-            'ary-arg1-yaml=s' => {arg=>'ary.arg1', is_yaml=>1},
-            'float1=f' => {arg=>'float1',},
-            'int1=i' => {arg=>'int1',},
-            'bool1!' => {arg=>'bool1',},
-            'help-arg' => {arg=>'help',},
+            'h|help|?' => {arg=>undef, orig_spec=>'help|h|?', parsed=>'PARSED'},
+            'v|version' => {arg=>undef, orig_spec=>'version|v', parsed=>'PARSED'},
+            'verbose!' => {arg=>undef, orig_spec=>'verbose!', parsed=>'PARSED'},
+            'format=s' => {arg=>undef, orig_spec=>'format=s', parsed=>'PARSED'},
+            'format-options=s' => {arg=>undef, orig_spec=>'format-options=s', parsed=>'PARSED'},
+            'str-arg1=s' => {arg=>'str_arg1', parsed=>'PARSED'},
+            'ary-arg1=s' => {arg=>'ary.arg1', parsed=>'PARSED'},
+            'ary-arg1-json=s' => {arg=>'ary.arg1', is_json=>1, parsed=>'PARSED'},
+            'ary-arg1-yaml=s' => {arg=>'ary.arg1', is_yaml=>1, parsed=>'PARSED'},
+            'float1=f' => {arg=>'float1', parsed=>'PARSED', noncode_aliases=>['f=f']},
+            'f=f' => {is_alias=>1, alias=>'f', alias_for=>'float1=f', is_code=>0, arg=>'float1', parsed=>'PARSED'},
+            'int1=i' => {arg=>'int1', parsed=>'PARSED', code_aliases=>['set-zero']},
+            'set-zero' => {is_alias=>1, alias=>'set_zero', alias_for=>'int1=i', is_code=>1, arg=>'int1', parsed=>'PARSED'},
+            'bool1!' => {arg=>'bool1', parsed=>'PARSED'},
+            'help-arg' => {arg=>'help', parsed=>'PARSED'},
         },
         'func.opts' => [
             '?',
@@ -82,6 +104,7 @@ my $expected_res = [
             'ary-arg1-json',
             'ary-arg1-yaml',
             'bool1',
+            'f',
             'float1',
             'format',
             'format-options',
@@ -93,6 +116,7 @@ my $expected_res = [
             'no-verbose',
             'nobool1',
             'noverbose',
+            'set-zero',
             'str-arg1',
             'v',
             'verbose',
