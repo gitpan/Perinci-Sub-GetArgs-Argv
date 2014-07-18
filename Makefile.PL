@@ -24,10 +24,12 @@ my %WriteMakefileArgs = (
     "Data::Sah::Normalize" => 0,
     "Function::Fallback::CoreOrPP" => 0,
     "Getopt::Long::Util" => "0.74",
+    "JSON" => 0,
     "Perinci::Sub::GetArgs::Array" => "0.14",
     "Perinci::Sub::Normalize" => 0,
     "Perinci::Sub::Util" => 0,
-    "Rinci" => "v1.1.43"
+    "Rinci" => "v1.1.43",
+    "YAML::Syck" => 0
   },
   "TEST_REQUIRES" => {
     "Data::Clean::JSON" => 0,
@@ -36,7 +38,7 @@ my %WriteMakefileArgs = (
     "IPC::Open3" => 0,
     "Test::More" => "0.98"
   },
-  "VERSION" => "0.39",
+  "VERSION" => "0.40",
   "test" => {
     "TESTS" => "t/*.t"
   }
@@ -52,11 +54,13 @@ my %FallbackPrereqs = (
   "Getopt::Long::Util" => "0.74",
   "IO::Handle" => 0,
   "IPC::Open3" => 0,
+  "JSON" => 0,
   "Perinci::Sub::GetArgs::Array" => "0.14",
   "Perinci::Sub::Normalize" => 0,
   "Perinci::Sub::Util" => 0,
   "Rinci" => "v1.1.43",
-  "Test::More" => "0.98"
+  "Test::More" => "0.98",
+  "YAML::Syck" => 0
 );
 
 

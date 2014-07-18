@@ -22,16 +22,18 @@ requires:
   Data::Sah::Normalize: '0'
   Function::Fallback::CoreOrPP: '0'
   Getopt::Long::Util: '0.74'
+  JSON: '0'
   Perinci::Sub::GetArgs::Array: '0.14'
   Perinci::Sub::Normalize: '0'
   Perinci::Sub::Util: '0'
   Rinci: v1.1.43
+  YAML::Syck: '0'
   perl: '5.010001'
 resources:
   bugtracker: https://rt.cpan.org/Public/Dist/Display.html?Name=Perinci-Sub-GetArgs-Argv
   homepage: https://metacpan.org/release/Perinci-Sub-GetArgs-Argv
   repository: git://github.com/sharyanto/perl-Perinci-Sub-GetArgs-Argv.git
-version: '0.39'
+version: '0.40'
 x_Dist_Zilla:
   perl:
     version: '5.018002'
@@ -260,10 +262,6 @@ x_Dist_Zilla:
           type: requires
       name: Prereqs
       version: '5.019'
-    -
-      class: Dist::Zilla::Plugin::Extras
-      name: 'lint-prereqs / assume-used'
-      version: '0.01'
     -
       class: Dist::Zilla::Plugin::FinderCode
       name: ':InstallModules'

@@ -17,8 +17,8 @@ our @EXPORT_OK = qw(
                        get_args_from_argv
                );
 
-our $DATE = '2014-07-17'; # DATE
-our $VERSION = '0.39'; # VERSION
+our $DATE = '2014-07-18'; # DATE
+our $VERSION = '0.40'; # VERSION
 
 our %SPEC;
 
@@ -719,7 +719,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-This document describes version 0.39 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-07-17.
+This document describes version 0.40 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-07-18.
 
 =head1 SYNOPSIS
 

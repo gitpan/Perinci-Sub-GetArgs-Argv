@@ -1,5 +1,13 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.40     2014-07-18 (SHARYANTO)
+
+         - No functional changes.
+
+         - Revert previous decision: Deliberately not including YAML::Syck &
+           JSON as prereq to reduce deps. It complicates testing [CT].
+
+
 0.39     2014-07-17 (SHARYANTO)
 
          - To reduce dependencies, deliberately no longer lists JSON and
