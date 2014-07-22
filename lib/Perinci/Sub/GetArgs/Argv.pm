@@ -17,8 +17,8 @@ our @EXPORT_OK = qw(
                        get_args_from_argv
                );
 
-our $DATE = '2014-07-18'; # DATE
-our $VERSION = '0.44'; # VERSION
+our $DATE = '2014-07-22'; # DATE
+our $VERSION = '0.45'; # VERSION
 
 our %SPEC;
 
@@ -635,7 +635,8 @@ sub get_args_from_argv {
                 my $is_array_of_simple_scalar = $type eq 'array' &&
                     $cs->{of} && $cs->{of}[0] =~ $re_simple_scalar;
 
-                if ($as->{greedy} && ref($val) eq 'ARRAY') {
+                if ($as->{greedy} && ref($val) eq 'ARRAY' &&
+                        !$is_array_of_simple_scalar) {
                     my $i = 0;
                     for (@$val) {
                       TRY_PARSING_AS_JSON_YAML:
@@ -745,7 +746,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-This document describes version 0.44 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-07-18.
+This document describes version 0.45 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-07-22.
 
 =head1 SYNOPSIS
 
@@ -873,7 +874,7 @@ As with GetOptions, this function modifies its C<argv> argument, so you might
 want to copy the original C<argv> first (or pass a copy instead) if you want to
 preserve the original.
 
-See also: genI<getopt>longI<spec>from_meta() which is the routine that generates
+See also: gen_getopt_long_spec_from_meta() which is the routine that generates
 the specification.
 
 Arguments ('*' denotes required arguments):
@@ -887,7 +888,7 @@ Allow extra/unassigned elements in argv.
 If set to 1, then if there are array elements unassigned to one of the
 arguments, instead of generating an error, this function will just ignore them.
 
-This option will be passed to Perinci::Sub::GetArgs::Array's allowI<extra>elems.
+This option will be passed to Perinci::Sub::GetArgs::Array's allow_extra_elems.
 
 =item * B<args> => I<hash>
 
@@ -919,8 +920,8 @@ hook to supply value from STDIN or file contents (if argument has C<cmdline_src>
 specification key set).
 
 This hook will be called for each missing argument. It will be supplied hash
-arguments: (arg => $theI<missing>argumentI<name, args =>
-$the>resultingI<args>soI<far, spec => $the>arg_spec).
+arguments: (arg => $the_missing_argument_name, args =>
+$the_resulting_args_so_far, spec => $the_arg_spec).
 
 The hook can return true if it succeeds in making the missing situation
 resolved. In this case, this function will not report the argument as missing.
@@ -932,13 +933,13 @@ Whether to recognize --ARGNAME-json.
 This is useful for example if you want to specify a value which is not
 expressible from the command-line, like 'undef'.
 
-    % script.pl --name-json 'null'
+ % script.pl --name-json 'null'
 
 But every other string will need to be quoted:
 
-    % script.pl --name-json '"foo"'
+ % script.pl --name-json '"foo"'
 
-See also: perI<arg>yaml. You should enable just one instead of turning on both.
+See also: per_arg_yaml. You should enable just one instead of turning on both.
 
 =item * B<per_arg_yaml> => I<bool> (default: 0)
 
@@ -947,9 +948,9 @@ Whether to recognize --ARGNAME-yaml.
 This is useful for example if you want to specify a value which is not
 expressible from the command-line, like 'undef'.
 
-    % script.pl --name-yaml '~'
+ % script.pl --name-yaml '~'
 
-See also: perI<arg>json. You should enable just one instead of turning on both.
+See also: per_arg_json. You should enable just one instead of turning on both.
 
 =item * B<strict> => I<bool> (default: 1)
 

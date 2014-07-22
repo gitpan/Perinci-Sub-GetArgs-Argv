@@ -1,5 +1,10 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.45     2014-07-22 (SHARYANTO)
+
+         - Don't attempt parsing argv as json/yaml if array of simple scalar.
+
+
 0.44     2014-07-18 (SHARYANTO)
 
          - These changes are to aid completion.
