@@ -17,8 +17,8 @@ our @EXPORT_OK = qw(
                        get_args_from_argv
                );
 
-our $DATE = '2014-07-22'; # DATE
-our $VERSION = '0.45'; # VERSION
+our $DATE = '2014-07-23'; # DATE
+our $VERSION = '0.46'; # VERSION
 
 our %SPEC;
 
@@ -143,14 +143,28 @@ _
             schema  => 'hash*',
         },
         common_opts => {
-            summary => 'A hash of Getopt::Long option specifications'.
-                'and handlers',
-            schema  => 'hash*',
+            summary => 'Common options',
             description => <<'_',
 
-This argument is used to specify common options.
+A hash where the values are hashes containing these keys: `getopt` (Getopt::Long
+option specification), `handler` (Getopt::Long handler). Will be passed to
+`get_args_from_argv()`. Example:
+
+    {
+        help => {
+            getopt  => 'help|h|?',
+            handler => sub { ... },
+            summary => 'Display help and exit',
+        },
+        version => {
+            getopt  => 'version|v',
+            handler => sub { ... },
+            summary => 'Display version and exit',
+        },
+    }
 
 _
+            schema => ['hash*'],
         },
         per_arg_json => {
             summary => 'Whether to add --NAME-json for non-simple arguments',
@@ -195,10 +209,13 @@ sub gen_getopt_long_spec_from_meta {
     my %seen_common_opts;
     my %seen_func_opts;
 
-    for my $ospec (keys %$co) {
+    for my $k (keys %$co) {
+        my $v = $co->{$k};
+        my $ospec   = $v->{getopt};
+        my $handler = $v->{handler};
         my $res = parse_getopt_long_opt_spec($ospec)
             or return [400, "Can't parse common opt spec '$ospec'"];
-        $go_spec{ $res->{normalized} } = $co->{$ospec};
+        $go_spec{ $res->{normalized} } = $handler;
         $specmeta{ $res->{normalized} } = {arg=>undef, orig_spec=>$ospec, parsed=>$res};
         for (@{ $res->{opts} }) {
             return [412, "Clash of common opt '$_'"] if $seen_opts{$_};
@@ -389,12 +406,14 @@ sub gen_getopt_long_spec_from_meta {
     my $func_opts   = [sort(map {length($_)>1 ? "--$_":"-$_"} keys %seen_func_opts)];
     my $opts_by_common = {};
     for my $k (keys %$co) {
+        my $v = $co->{$k};
+        my $ospec = $v->{getopt};
         my @opts;
         for (keys %seen_common_opts) {
-            next unless $seen_common_opts{$_} eq $k;
+            next unless $seen_common_opts{$_} eq $ospec;
             push @opts, (length($_)>1 ? "--$_":"-$_");
         }
-        $opts_by_common->{$k} = [sort @opts];
+        $opts_by_common->{$ospec} = [sort @opts];
     }
     my $opts_by_arg = {};
     for my $arg (keys %$args_p) {
@@ -503,13 +522,28 @@ See also: per_arg_yaml. You should enable just one instead of turning on both.
 _
         },
         common_opts => {
-            schema => ['hash*' => {}],
-            summary => 'Specify common options',
+            summary => 'Common options',
             description => <<'_',
 
-A hash of Getopt::Long option specifications and handlers.
+A hash where the values are hashes containing these keys: `getopt` (Getopt::Long
+option specification), `handler` (Getopt::Long handler). Will be passed to
+`get_args_from_argv()`. Example:
+
+    {
+        help => {
+            getopt  => 'help|h|?',
+            handler => sub { ... },
+            summary => 'Display help and exit',
+        },
+        version => {
+            getopt  => 'version|v',
+            handler => sub { ... },
+            summary => 'Display version and exit',
+        },
+    }
 
 _
+            schema => ['hash*'],
         },
         allow_extra_elems => {
             schema => ['bool' => {default=>0}],
@@ -746,7 +780,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-This document describes version 0.45 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-07-22.
+This document describes version 0.46 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-07-23.
 
 =head1 SYNOPSIS
 
@@ -823,9 +857,24 @@ Reference to hash which will store the result.
 
 =item * B<common_opts> => I<hash>
 
-A hash of Getopt::Long option specificationsand handlers.
+Common options.
 
-This argument is used to specify common options.
+A hash where the values are hashes containing these keys: C<getopt> (Getopt::Long
+option specification), C<handler> (Getopt::Long handler). Will be passed to
+C<get_args_from_argv()>. Example:
+
+ {
+     help =E<gt> {
+         getopt  =E<gt> 'help|h|?',
+         handler =E<gt> sub { ... },
+         summary =E<gt> 'Display help and exit',
+     },
+     version =E<gt> {
+         getopt  =E<gt> 'version|v',
+         handler =E<gt> sub { ... },
+         summary =E<gt> 'Display version and exit',
+     },
+ }
 
 =item * B<meta>* => I<hash>
 
@@ -900,9 +949,24 @@ If not specified, defaults to @ARGV
 
 =item * B<common_opts> => I<hash>
 
-Specify common options.
+Common options.
 
-A hash of Getopt::Long option specifications and handlers.
+A hash where the values are hashes containing these keys: C<getopt> (Getopt::Long
+option specification), C<handler> (Getopt::Long handler). Will be passed to
+C<get_args_from_argv()>. Example:
+
+ {
+     help =E<gt> {
+         getopt  =E<gt> 'help|h|?',
+         handler =E<gt> sub { ... },
+         summary =E<gt> 'Display help and exit',
+     },
+     version =E<gt> {
+         getopt  =E<gt> 'version|v',
+         handler =E<gt> sub { ... },
+         summary =E<gt> 'Display version and exit',
+     },
+ }
 
 =item * B<meta>* => I<hash>
 

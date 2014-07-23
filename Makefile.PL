@@ -24,7 +24,7 @@ my %WriteMakefileArgs = (
     "Data::Clean::FromJSON" => "0.11",
     "Data::Sah::Normalize" => 0,
     "Function::Fallback::CoreOrPP" => 0,
-    "Getopt::Long::Util" => "0.74",
+    "Getopt::Long::Util" => "0.76",
     "JSON" => 0,
     "Perinci::Sub::GetArgs::Array" => "0.14",
     "Perinci::Sub::Normalize" => 0,
@@ -39,7 +39,7 @@ my %WriteMakefileArgs = (
     "IPC::Open3" => 0,
     "Test::More" => "0.98"
   },
-  "VERSION" => "0.45",
+  "VERSION" => "0.46",
   "test" => {
     "TESTS" => "t/*.t"
   }
@@ -52,7 +52,7 @@ my %FallbackPrereqs = (
   "Data::Sah::Normalize" => 0,
   "File::Spec" => 0,
   "Function::Fallback::CoreOrPP" => 0,
-  "Getopt::Long::Util" => "0.74",
+  "Getopt::Long::Util" => "0.76",
   "IO::Handle" => 0,
   "IPC::Open3" => 0,
   "JSON" => 0,

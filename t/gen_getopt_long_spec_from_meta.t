@@ -32,11 +32,11 @@ my $res = gen_getopt_long_spec_from_meta(
     per_arg_json=>1,
     per_arg_yaml=>1,
     common_opts=>{
-        'help|h|?'  => sub {},
-        'version|v' => sub {},
-        'verbose!' => sub {},
-        'format=s'  => sub {},
-        'format-options=s' => sub {},
+        help    => {getopt=>'help|h|?' , handler=>sub {}},
+        version => {getopt=>'version|v', handler=>sub {}},
+        verbose => {getopt=>'verbose!' , handler=>sub {}},
+        format  => {getopt=>'format=s' , handler=>sub {}},
+        fmtopts => {getopt=>'format-options=s', handler=>sub {}},
     },
 );
 
@@ -64,8 +64,8 @@ $cleanser->clean_in_place($res);
 my $expected_res = [
     200, "OK",
     {
-        'h|help|?' => 'CODE',
-        'v|version' => 'CODE',
+        'help|h|?' => 'CODE',
+        'version|v' => 'CODE',
         'verbose!' => 'CODE',
         'format=s' => 'CODE',
         'format-options=s' => 'CODE',
@@ -82,8 +82,8 @@ my $expected_res = [
     },
     {
         'func.specmeta' => {
-            'h|help|?' => {arg=>undef, orig_spec=>'help|h|?', parsed=>'PARSED',},
-            'v|version' => {arg=>undef, orig_spec=>'version|v', parsed=>'PARSED',},
+            'help|h|?' => {arg=>undef, orig_spec=>'help|h|?', parsed=>'PARSED',},
+            'version|v' => {arg=>undef, orig_spec=>'version|v', parsed=>'PARSED',},
             'verbose!' => {arg=>undef, orig_spec=>'verbose!', parsed=>'PARSED',},
             'format=s' => {arg=>undef, orig_spec=>'format=s', parsed=>'PARSED',},
             'format-options=s' => {arg=>undef, orig_spec=>'format-options=s', parsed=>'PARSED',},

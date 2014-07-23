@@ -102,8 +102,8 @@ test_getargs(meta=>$meta, argv=>['--arg1', '{"foo": false}',
     my $extra  = 0;
     my $extra2 = 0;
     test_getargs(meta=>$meta, argv=>[qw/--arg1 1 --arg2 2 --extra --extra2 6/],
-                 common_opts=>{extra=>sub{$extra=5},
-                               "extra2=s"=>sub{$extra2=$_[1]}},
+                 common_opts=>{extra=>{getopt=>'extra', handler=>sub{$extra=5}},
+                               extra2=>{getopt=>"extra2=s", handler=>sub{$extra2=$_[1]}}},
                  args=>{arg1=>1, arg2=>2},
                  posttest=>sub {
                      is($extra , 5, "extra is parsed");
@@ -113,8 +113,8 @@ test_getargs(meta=>$meta, argv=>['--arg1', '{"foo": false}',
              );
     $extra = 0;
     test_getargs(meta=>$meta, argv=>[qw/ --arg1 1 --arg2 2 --arg1-arg 3 --arg2-arg 4/],
-                 common_opts=>{"arg1=s"=>sub{$extra=$_[1]},
-                               "--arg2=s"=>sub{$extra2=$_[1]}},
+                 common_opts=>{arg1=>{getopt=>"arg1=s", handler=>sub{$extra=$_[1]}},
+                               arg2=>{getopt=>"--arg2=s", handler=>sub{$extra2=$_[1]}}},
                  args=>{arg1=>3, arg2=>4},
                  posttest=>sub {
                      is($extra , 1, "arg1 is processed");

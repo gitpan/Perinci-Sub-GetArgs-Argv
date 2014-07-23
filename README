@@ -3,9 +3,9 @@ NAME
     arguments (@ARGV)
 
 VERSION
-    This document describes version 0.45 of Perinci::Sub::GetArgs::Argv
+    This document describes version 0.46 of Perinci::Sub::GetArgs::Argv
     (from Perl distribution Perinci-Sub-GetArgs-Argv), released on
-    2014-07-22.
+    2014-07-23.
 
 SYNOPSIS
      use Perinci::Sub::GetArgs::Argv;
@@ -77,9 +77,24 @@ FUNCTIONS
 
     *   common_opts => *hash*
 
-        A hash of Getopt::Long option specificationsand handlers.
+        Common options.
 
-        This argument is used to specify common options.
+        A hash where the values are hashes containing these keys: "getopt"
+        (Getopt::Long option specification), "handler" (Getopt::Long
+        handler). Will be passed to "get_args_from_argv()". Example:
+
+         {
+             help =E<gt> {
+                 getopt  =E<gt> 'help|h|?',
+                 handler =E<gt> sub { ... },
+                 summary =E<gt> 'Display help and exit',
+             },
+             version =E<gt> {
+                 getopt  =E<gt> 'version|v',
+                 handler =E<gt> sub { ... },
+                 summary =E<gt> 'Display version and exit',
+             },
+         }
 
     *   meta* => *hash*
 
@@ -151,9 +166,24 @@ FUNCTIONS
 
     *   common_opts => *hash*
 
-        Specify common options.
+        Common options.
 
-        A hash of Getopt::Long option specifications and handlers.
+        A hash where the values are hashes containing these keys: "getopt"
+        (Getopt::Long option specification), "handler" (Getopt::Long
+        handler). Will be passed to "get_args_from_argv()". Example:
+
+         {
+             help =E<gt> {
+                 getopt  =E<gt> 'help|h|?',
+                 handler =E<gt> sub { ... },
+                 summary =E<gt> 'Display help and exit',
+             },
+             version =E<gt> {
+                 getopt  =E<gt> 'version|v',
+                 handler =E<gt> sub { ... },
+                 summary =E<gt> 'Display version and exit',
+             },
+         }
 
     *   meta* => *hash*
 

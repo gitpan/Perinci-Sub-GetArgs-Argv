@@ -1,5 +1,15 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.46     2014-07-23 (SHARYANTO)
+
+         [INCOMPATIBLE CHANGES]
+
+         - Adjust to Getopt::Long::Util 0.46 (option ordering).
+
+         - Change 'common_opts' argument form so it is now the same as
+           Perinci::CmdLine's.
+
+
 0.45     2014-07-22 (SHARYANTO)
 
          - Don't attempt parsing argv as json/yaml if array of simple scalar.
