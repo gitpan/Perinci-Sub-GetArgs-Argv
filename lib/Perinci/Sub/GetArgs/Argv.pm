@@ -18,7 +18,7 @@ our @EXPORT_OK = qw(
                );
 
 our $DATE = '2014-07-23'; # DATE
-our $VERSION = '0.46'; # VERSION
+our $VERSION = '0.47'; # VERSION
 
 our %SPEC;
 
@@ -215,8 +215,8 @@ sub gen_getopt_long_spec_from_meta {
         my $handler = $v->{handler};
         my $res = parse_getopt_long_opt_spec($ospec)
             or return [400, "Can't parse common opt spec '$ospec'"];
-        $go_spec{ $res->{normalized} } = $handler;
-        $specmeta{ $res->{normalized} } = {arg=>undef, orig_spec=>$ospec, parsed=>$res};
+        $go_spec{$ospec} = $handler;
+        $specmeta{$ospec} = {arg=>undef, orig_spec=>$ospec, parsed=>$res};
         for (@{ $res->{opts} }) {
             return [412, "Clash of common opt '$_'"] if $seen_opts{$_};
             $seen_opts{$_}++; $seen_common_opts{$_} = $ospec;
@@ -780,7 +780,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-This document describes version 0.46 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-07-23.
+This document describes version 0.47 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-07-23.
 
 =head1 SYNOPSIS
 

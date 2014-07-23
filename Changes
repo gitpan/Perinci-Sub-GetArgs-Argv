@@ -1,5 +1,12 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.47     2014-07-23 (SHARYANTO)
+
+         - No functional changes.
+
+         - Adjust to Getopt::Long::Util 0.77.
+
+
 0.46     2014-07-23 (SHARYANTO)
 
          [INCOMPATIBLE CHANGES]
