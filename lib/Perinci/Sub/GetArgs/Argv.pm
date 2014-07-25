@@ -17,8 +17,8 @@ our @EXPORT_OK = qw(
                        get_args_from_argv
                );
 
-our $DATE = '2014-07-23'; # DATE
-our $VERSION = '0.47'; # VERSION
+our $DATE = '2014-07-25'; # DATE
+our $VERSION = '0.48'; # VERSION
 
 our %SPEC;
 
@@ -69,8 +69,12 @@ sub _arg2opt {
 
 sub _opt2ospec {
     my ($opt, $schema) = @_;
-    if ($schema->[0] eq 'bool') {
-        if (length($opt) == 1 || $schema->[1]{is}) {
+    my $type = $schema->[0];
+    my $cs   = $schema->[1];
+    my $is_array_of_simple_scalar = $type eq 'array' &&
+        $cs->{of} && $cs->{of}[0] =~ $re_simple_scalar;
+    if ($type eq 'bool') {
+        if (length($opt) == 1 || $cs->{is}) {
             # single-letter option like -b doesn't get --nob.
             # [bool=>{is=>1}] also means it's a flag and should not get
             # --nofoo.
@@ -79,9 +83,8 @@ sub _opt2ospec {
             return "$opt!";
         }
     } else {
-        return "$opt=" . ($schema->[0] eq 'int' ? 'i' :
-                              $schema->[0] eq 'float' ? 'f' :
-                                  's');
+        return "$opt=" . ($type eq 'int' ? 'i' : $type eq 'float' ? 'f' :
+                              $is_array_of_simple_scalar ? 's@' : 's');
     }
 }
 
@@ -780,7 +783,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-This document describes version 0.47 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-07-23.
+This document describes version 0.48 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-07-25.
 
 =head1 SYNOPSIS
 
