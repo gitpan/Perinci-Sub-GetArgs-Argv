@@ -18,7 +18,7 @@ our @EXPORT_OK = qw(
                );
 
 our $DATE = '2014-08-06'; # DATE
-our $VERSION = '0.49'; # VERSION
+our $VERSION = '0.50'; # VERSION
 
 our %SPEC;
 
@@ -618,7 +618,7 @@ sub get_args_from_argv {
     my $rargs = $fargs{args} // {};
 
     # 1. first we generate Getopt::Long spec
-    my $genres = $fargs{_genres} // gen_getopt_long_spec_from_meta(
+    my $genres = gen_getopt_long_spec_from_meta(
         meta => $meta, meta_is_normalized => 1,
         args => $rargs,
         common_opts  => $common_opts,
@@ -783,7 +783,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-This document describes version 0.49 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-08-06.
+This document describes version 0.50 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-08-06.
 
 =head1 SYNOPSIS
 

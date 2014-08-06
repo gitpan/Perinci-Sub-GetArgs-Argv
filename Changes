@@ -1,5 +1,10 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.50     2014-08-06 (SHARYANTO)
+
+         - Revert previous feature (accept _genres).
+
+
 0.49     2014-08-06 (SHARYANTO)
 
          - Remove orig_spec key, because we now no longer re-order opts in ospec.
