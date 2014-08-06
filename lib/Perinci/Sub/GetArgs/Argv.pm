@@ -17,8 +17,8 @@ our @EXPORT_OK = qw(
                        get_args_from_argv
                );
 
-our $DATE = '2014-07-25'; # DATE
-our $VERSION = '0.48'; # VERSION
+our $DATE = '2014-08-06'; # DATE
+our $VERSION = '0.49'; # VERSION
 
 our %SPEC;
 
@@ -219,7 +219,7 @@ sub gen_getopt_long_spec_from_meta {
         my $res = parse_getopt_long_opt_spec($ospec)
             or return [400, "Can't parse common opt spec '$ospec'"];
         $go_spec{$ospec} = $handler;
-        $specmeta{$ospec} = {arg=>undef, orig_spec=>$ospec, parsed=>$res};
+        $specmeta{$ospec} = {arg=>undef, parsed=>$res};
         for (@{ $res->{opts} }) {
             return [412, "Clash of common opt '$_'"] if $seen_opts{$_};
             $seen_opts{$_}++; $seen_common_opts{$_} = $ospec;
@@ -618,7 +618,7 @@ sub get_args_from_argv {
     my $rargs = $fargs{args} // {};
 
     # 1. first we generate Getopt::Long spec
-    my $genres = gen_getopt_long_spec_from_meta(
+    my $genres = $fargs{_genres} // gen_getopt_long_spec_from_meta(
         meta => $meta, meta_is_normalized => 1,
         args => $rargs,
         common_opts  => $common_opts,
@@ -783,7 +783,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-This document describes version 0.48 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-07-25.
+This document describes version 0.49 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-08-06.
 
 =head1 SYNOPSIS
 

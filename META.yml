@@ -33,7 +33,7 @@ resources:
   bugtracker: https://rt.cpan.org/Public/Dist/Display.html?Name=Perinci-Sub-GetArgs-Argv
   homepage: https://metacpan.org/release/Perinci-Sub-GetArgs-Argv
   repository: git://github.com/sharyanto/perl-Perinci-Sub-GetArgs-Argv.git
-version: '0.48'
+version: '0.49'
 x_Dist_Zilla:
   perl:
     version: '5.018002'
