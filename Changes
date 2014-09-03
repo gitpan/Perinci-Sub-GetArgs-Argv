@@ -1,5 +1,12 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.51     2014-09-03 (PERLANCAR)
+
+         - Add option: ignore_converted_code (this option is needed e.g. by
+           Perinci::Sub::Complete to keep tab completion working even when there
+           is coderef cmdline_aliases property in arg spec).
+
+
 0.50     2014-08-06 (SHARYANTO)
 
          - Revert previous feature (accept _genres).

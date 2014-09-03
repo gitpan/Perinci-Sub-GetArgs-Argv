@@ -17,8 +17,8 @@ our @EXPORT_OK = qw(
                        get_args_from_argv
                );
 
-our $DATE = '2014-08-06'; # DATE
-our $VERSION = '0.50'; # VERSION
+our $DATE = '2014-09-03'; # DATE
+our $VERSION = '0.51'; # VERSION
 
 our %SPEC;
 
@@ -191,6 +191,18 @@ arguments, if arguments' schema is not simple scalar.
 
 _
         },
+        ignore_converted_code => {
+            summary => 'Whether to ignore coderefs converted to string',
+            schema => 'bool',
+            default => 0,
+            description => <<'_',
+
+Across network through JSON encoding, coderef in metadata (e.g. in
+`cmdline_aliases` property) usually gets converted to string `CODE`. In some
+cases, like for tab completion, this is harmless so you can turn this option on.
+
+_
+        },
     },
 };
 sub gen_getopt_long_spec_from_meta {
@@ -204,6 +216,7 @@ sub gen_getopt_long_spec_from_meta {
     my $co           = $fargs{common_opts} // {};
     my $per_arg_yaml = $fargs{per_arg_yaml} // 0;
     my $per_arg_json = $fargs{per_arg_json} // 0;
+    my $ignore_converted_code = $fargs{ignore_converted_code};
     my $rargs        = $fargs{args} // {};
 
     my %go_spec;
@@ -371,13 +384,17 @@ sub gen_getopt_long_spec_from_meta {
 
                 if ($alcode) {
                     if ($alcode eq 'CODE') {
-                        return [
-                            502,
-                            join("",
-                                 "Code in cmdline_aliases for arg $arg ",
-                                 "got converted into string, probably ",
-                                 "because of JSON/YAML transport"),
-                        ];
+                        if ($ignore_converted_code) {
+                            $alcode = sub {};
+                        } else {
+                            return [
+                                502,
+                                join("",
+                                     "Code in cmdline_aliases for arg $arg ",
+                                     "got converted into string, probably ",
+                                     "because of JSON/YAML transport"),
+                            ];
+                        }
                     }
                     $go_spec{$alospec} = sub {$alcode->($rargs, $_[1])};
                 } else {
@@ -579,6 +596,18 @@ resolved. In this case, this function will not report the argument as missing.
 
 _
         },
+        ignore_converted_code => {
+            summary => 'Whether to ignore coderefs converted to string',
+            schema => 'bool',
+            default => 0,
+            description => <<'_',
+
+Across network through JSON encoding, coderef in metadata (e.g. in
+`cmdline_aliases` property) usually gets converted to string `CODE`. In some
+cases, like for tab completion, this is harmless so you can turn this option on.
+
+_
+        },
     },
     result => {
         description => <<'_',
@@ -612,6 +641,7 @@ sub get_args_from_argv {
     my $per_arg_json      = $fargs{per_arg_json} // 0;
     my $allow_extra_elems = $fargs{allow_extra_elems} // 0;
     my $on_missing        = $fargs{on_missing_required_args};
+    my $ignore_converted_code = $fargs{ignore_converted_code};
     #$log->tracef("-> get_args_from_argv(), argv=%s", $argv);
 
     # to store the resulting args
@@ -624,6 +654,7 @@ sub get_args_from_argv {
         common_opts  => $common_opts,
         per_arg_json => $per_arg_json,
         per_arg_yaml => $per_arg_yaml,
+        ignore_converted_code => $ignore_converted_code,
     );
     return err($genres->[0], "Can't generate Getopt::Long spec", $genres)
         if $genres->[0] != 200;
@@ -783,7 +814,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-This document describes version 0.50 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-08-06.
+This document describes version 0.51 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-09-03.
 
 =head1 SYNOPSIS
 
@@ -879,6 +910,14 @@ C<get_args_from_argv()>. Example:
      },
  }
 
+=item * B<ignore_converted_code> => I<bool> (default: 0)
+
+Whether to ignore coderefs converted to string.
+
+Across network through JSON encoding, coderef in metadata (e.g. in
+C<cmdline_aliases> property) usually gets converted to string C<CODE>. In some
+cases, like for tab completion, this is harmless so you can turn this option on.
+
 =item * B<meta>* => I<hash>
 
 Rinci function metadata.
@@ -970,6 +1009,14 @@ C<get_args_from_argv()>. Example:
          summary =E<gt> 'Display version and exit',
      },
  }
+
+=item * B<ignore_converted_code> => I<bool> (default: 0)
+
+Whether to ignore coderefs converted to string.
+
+Across network through JSON encoding, coderef in metadata (e.g. in
+C<cmdline_aliases> property) usually gets converted to string C<CODE>. In some
+cases, like for tab completion, this is harmless so you can turn this option on.
 
 =item * B<meta>* => I<hash>
 
@@ -1071,7 +1118,7 @@ Please visit the project's homepage at L<https://metacpan.org/release/Perinci-Su
 
 =head1 SOURCE
 
-Source repository is at L<https://github.com/sharyanto/perl-Perinci-Sub-GetArgs-Argv>.
+Source repository is at L<https://github.com/perlancar/perl-Perinci-Sub-GetArgs-Argv>.
 
 =head1 BUGS
 
@@ -1083,11 +1130,11 @@ feature.
 
 =head1 AUTHOR
 
-Steven Haryanto <stevenharyanto@gmail.com>
+perlancar <perlancar@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2014 by Steven Haryanto.
+This software is copyright (c) 2014 by perlancar@cpan.org.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

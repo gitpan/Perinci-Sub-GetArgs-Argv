@@ -486,6 +486,13 @@ test_getargs(meta=>$meta, argv=>[qw/-X=foo/],
         argv   => [qw/--al1 val/],
         status => 502,
     );
+    test_getargs(
+        name   => 'option: ignore_converted_code',
+        meta   => $meta,
+        ignore_converted_code => 1,
+        argv   => [qw/--al1 val/],
+        status => 200,
+    );
 }
 
 subtest 'args option' => sub {
@@ -551,7 +558,8 @@ sub test_getargs {
         for (qw/strict
                 common_opts
                 per_arg_json per_arg_yaml
-                allow_extra_elems on_missing_required_args/) {
+                allow_extra_elems on_missing_required_args
+                ignore_converted_code/) {
             $input_args{$_} = $args{$_} if defined $args{$_};
         }
         #diag explain \%input_args;

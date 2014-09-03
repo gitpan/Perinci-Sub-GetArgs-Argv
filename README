@@ -3,9 +3,9 @@ NAME
     arguments (@ARGV)
 
 VERSION
-    This document describes version 0.50 of Perinci::Sub::GetArgs::Argv
+    This document describes version 0.51 of Perinci::Sub::GetArgs::Argv
     (from Perl distribution Perinci-Sub-GetArgs-Argv), released on
-    2014-08-06.
+    2014-09-03.
 
 SYNOPSIS
      use Perinci::Sub::GetArgs::Argv;
@@ -96,6 +96,15 @@ FUNCTIONS
              },
          }
 
+    *   ignore_converted_code => *bool* (default: 0)
+
+        Whether to ignore coderefs converted to string.
+
+        Across network through JSON encoding, coderef in metadata (e.g. in
+        "cmdline_aliases" property) usually gets converted to string "CODE".
+        In some cases, like for tab completion, this is harmless so you can
+        turn this option on.
+
     *   meta* => *hash*
 
         Rinci function metadata.
@@ -184,6 +193,15 @@ FUNCTIONS
                  summary =E<gt> 'Display version and exit',
              },
          }
+
+    *   ignore_converted_code => *bool* (default: 0)
+
+        Whether to ignore coderefs converted to string.
+
+        Across network through JSON encoding, coderef in metadata (e.g. in
+        "cmdline_aliases" property) usually gets converted to string "CODE".
+        In some cases, like for tab completion, this is harmless so you can
+        turn this option on.
 
     *   meta* => *hash*
 
@@ -287,7 +305,7 @@ HOMEPAGE
 
 SOURCE
     Source repository is at
-    <https://github.com/sharyanto/perl-Perinci-Sub-GetArgs-Argv>.
+    <https://github.com/perlancar/perl-Perinci-Sub-GetArgs-Argv>.
 
 BUGS
     Please report any bugs or feature requests on the bugtracker website
@@ -298,10 +316,10 @@ BUGS
     to an existing test-file that illustrates the bug or desired feature.
 
 AUTHOR
-    Steven Haryanto <stevenharyanto@gmail.com>
+    perlancar <perlancar@cpan.org>
 
 COPYRIGHT AND LICENSE
-    This software is copyright (c) 2014 by Steven Haryanto.
+    This software is copyright (c) 2014 by perlancar@cpan.org.
 
     This is free software; you can redistribute it and/or modify it under
     the same terms as the Perl 5 programming language system itself.
