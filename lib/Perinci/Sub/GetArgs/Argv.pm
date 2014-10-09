@@ -1,5 +1,8 @@
 package Perinci::Sub::GetArgs::Argv;
 
+our $DATE = '2014-10-09'; # DATE
+our $VERSION = '0.52'; # VERSION
+
 use 5.010001;
 use strict;
 use warnings;
@@ -16,9 +19,6 @@ our @EXPORT_OK = qw(
                        gen_getopt_long_spec_from_meta
                        get_args_from_argv
                );
-
-our $DATE = '2014-09-03'; # DATE
-our $VERSION = '0.51'; # VERSION
 
 our %SPEC;
 
@@ -86,6 +86,216 @@ sub _opt2ospec {
         return "$opt=" . ($type eq 'int' ? 'i' : $type eq 'float' ? 'f' :
                               $is_array_of_simple_scalar ? 's@' : 's');
     }
+}
+
+sub _args2opts {
+    my %args = @_;
+
+    my $argprefix        = $args{argprefix};
+    my $parent_args      = $args{parent_args};
+    my $meta             = $args{meta};
+    my $seen_opts        = $args{seen_opts};
+    my $seen_common_opts = $args{seen_common_opts};
+    my $seen_func_opts   = $args{seen_func_opts};
+    my $rargs            = $args{rargs};
+    my $go_spec          = $args{go_spec};
+    my $specmeta         = $args{specmeta};
+
+    my $args_p = $meta->{args} // {};
+
+    for my $arg (keys %$args_p) {
+        my $fqarg = "$argprefix$arg";
+        my $as    = $args_p->{$arg};
+        my $sch   = $as->{schema} // ['any', {}];
+        my $type  = $sch->[0] // '';
+        my $cs    = $sch->[1] // {};
+
+        # XXX normalization of 'of' clause should've been handled by sah itself
+        if ($type eq 'array' && $cs->{of}) {
+            $cs->{of} = normalize_schema($cs->{of});
+        }
+        my $opt = _arg2opt($fqarg);
+        if ($seen_opts->{$opt}) {
+            my $i = 1;
+            my $opt2;
+            while (1) {
+                $opt2 = "$opt-arg" . ($i > 1 ? $i : '');
+                last unless $seen_opts->{$opt2};
+                $i++;
+            }
+            $opt = $opt2;
+        }
+
+        my $ospec = _opt2ospec($opt, $sch);
+        my $parsed = parse_getopt_long_opt_spec($ospec);
+        my $is_simple_scalar = $type =~ $re_simple_scalar;
+        my $is_array_of_simple_scalar = $type eq 'array' &&
+            $cs->{of} && $cs->{of}[0] =~ $re_simple_scalar;
+
+        # why we use coderefs here? due to Getopt::Long's behavior. when
+        # @ARGV=qw() and go_spec is ('foo=s' => \$opts{foo}) then %opts will
+        # become (foo=>undef). but if go_spec is ('foo=s' => sub { $opts{foo} =
+        # $_[1] }) then %opts will become (), which is what we prefer, so we can
+        # later differentiate "unspecified" (exists($opts{foo}) == false) and
+        # "specified as undef" (exists($opts{foo}) == true but
+        # defined($opts{foo}) == false).
+
+        my $handler = sub {
+            my ($val, $val_set);
+            if ($is_array_of_simple_scalar) {
+                $rargs->{$arg} //= [];
+                $val_set = 1; $val = $_[1];
+                push @{ $rargs->{$arg} }, $val;
+            } elsif ($is_simple_scalar) {
+                $val_set = 1; $val = $_[1];
+                $rargs->{$arg} = $val;
+            } else {
+                {
+                    my ($success, $e, $decoded);
+                    ($success, $e, $decoded) = _parse_json($_[1]);
+                    if ($success) {
+                        $val_set = 1; $val = $decoded;
+                        $rargs->{$arg} = $val;
+                        last;
+                    }
+                    ($success, $e, $decoded) = _parse_yaml($_[1]);
+                    if ($success) {
+                        $val_set = 1; $val = $decoded;
+                        $rargs->{$arg} = $val;
+                        last;
+                    }
+                    die "Invalid YAML/JSON in arg '$fqarg'";
+                }
+            }
+            if ($val_set && $as->{cmdline_on_getopt}) {
+                $as->{cmdline_on_getopt}->(
+                    arg=>$arg, fqarg=>$fqarg, value=>$val, args=>$rargs,
+                    opt=>$opt,
+                );
+            }
+        }; # handler
+        $go_spec->{$ospec} = $handler;
+        $specmeta->{$ospec} = {arg=>$arg, fqarg=>$fqarg, parsed=>$parsed};
+        $seen_opts->{$opt}++; $seen_func_opts->{$opt} = $fqarg;
+        if ($parsed->{is_neg}) {
+            $seen_opts->{"no$opt"}++ ; $seen_func_opts->{"no$opt"}  = $fqarg;
+            $seen_opts->{"no-$opt"}++; $seen_func_opts->{"no-$opt"} = $fqarg;
+        }
+
+        if ($parent_args->{per_arg_json} && $type !~ $re_simple_scalar) {
+            my $jopt = "$opt-json";
+            if ($seen_opts->{$jopt}) {
+                warn "Clash of option: $jopt, not added";
+            } else {
+                my $jospec = "$jopt=s";
+                $go_spec->{$jospec} = sub {
+                    my ($success, $e, $decoded);
+                    ($success, $e, $decoded) = _parse_json($_[1]);
+                    if ($success) {
+                        $rargs->{$arg} = $decoded;
+                    } else {
+                        die "Invalid JSON in option --$jopt: $_[1]: $e";
+                    }
+                };
+                my $parsed = parse_getopt_long_opt_spec($jospec);
+                $specmeta->{$jospec} = {arg=>$arg, fqarg=>$fqarg, is_json=>1, parsed=>$parsed};
+                $seen_opts->{$jopt}++; $seen_func_opts->{$jopt} = $fqarg;
+            }
+        }
+        if ($parent_args->{per_arg_yaml} && $type !~ $re_simple_scalar) {
+            my $yopt = "$opt-yaml";
+            if ($seen_opts->{$yopt}) {
+                warn "Clash of option: $yopt, not added";
+            } else {
+                my $yospec = "$yopt=s";
+                $go_spec->{$yospec} = sub {
+                    my ($success, $e, $decoded);
+                    ($success, $e, $decoded) = _parse_yaml($_[1]);
+                    if ($success) {
+                        $rargs->{$arg} = $decoded;
+                    } else {
+                        die "Invalid YAML in option --$yopt: $_[1]: $e";
+                    }
+                };
+                my $parsed = parse_getopt_long_opt_spec($yospec);
+                $specmeta->{$yospec} = {arg=>$arg, fqarg=>$fqarg, is_yaml=>1, parsed=>$parsed};
+                $seen_opts->{$yopt}++; $seen_func_opts->{$yopt} = $fqarg;
+            }
+        }
+
+        # parse argv_aliases
+        if ($as->{cmdline_aliases}) {
+            for my $al (keys %{$as->{cmdline_aliases}}) {
+                my $alopt = _arg2opt("$argprefix$al");
+                if ($seen_opts->{$alopt}) {
+                    warn "Clash of cmdline_alias option $al";
+                    next;
+                }
+                my $alspec = $as->{cmdline_aliases}{$al};
+                my $alsch = $alspec->{schema} // $sch;
+                my $alcode = $alspec->{code};
+                my $alospec;
+                if ($alcode && $alsch->[0] eq 'bool') {
+                    # bool --alias doesn't get --noalias if has code
+                    $alospec = $alopt; # instead of "$alopt!"
+                } else {
+                    $alospec = _opt2ospec($alopt, $alsch);
+                }
+
+                if ($alcode) {
+                    if ($alcode eq 'CODE') {
+                        if ($parent_args->{ignore_converted_code}) {
+                            $alcode = sub {};
+                        } else {
+                            return [
+                                502,
+                                join("",
+                                     "Code in cmdline_aliases for arg $fqarg ",
+                                     "got converted into string, probably ",
+                                     "because of JSON/YAML transport"),
+                            ];
+                        }
+                    }
+                    $go_spec->{$alospec} =
+                        sub {$alcode->($rargs, $_[1])};
+                } else {
+                    $go_spec->{$alospec} = $handler;
+                }
+                my $parsed = parse_getopt_long_opt_spec($alospec);
+                $specmeta->{$alospec} = {
+                    alias     => $al,
+                    is_alias  => 1,
+                    alias_for => $ospec,
+                    arg       => $arg,
+                    fqarg     => $fqarg,
+                    is_code   => $alcode ? 1:0,
+                    parsed    => $parsed,
+                };
+                push @{$specmeta->{$ospec}{($alcode ? '':'non').'code_aliases'}},
+                    $alospec;
+                $seen_opts->{$alopt}++; $seen_func_opts->{$alopt} = $fqarg;
+                if ($parsed->{is_neg}) {
+                    $seen_opts->{"no$alopt"}++ ; $seen_func_opts->{"no$alopt"}  = $fqarg;
+                    $seen_opts->{"no-$alopt"}++; $seen_func_opts->{"no-$alopt"} = $fqarg;
+                }
+            }
+        } # cmdline_aliases
+
+        # submetadata
+        if ($as->{meta}) {
+            $rargs->{$arg} = {};
+            my $res = _args2opts(
+                %args,
+                argprefix => "$argprefix$arg\::",
+                meta      => $as->{meta},
+                rargs     => $rargs->{$arg},
+            );
+            return $res if $res;
+        }
+
+    } # for arg
+
+    undef;
 }
 
 $SPEC{gen_getopt_long_spec_from_meta} = {
@@ -199,7 +409,10 @@ _
 
 Across network through JSON encoding, coderef in metadata (e.g. in
 `cmdline_aliases` property) usually gets converted to string `CODE`. In some
-cases, like for tab completion, this is harmless so you can turn this option on.
+cases, like for tab completion, this is pretty harmless so you can turn this
+option on. For example, in the case of `cmdline_aliases`, the effect is just
+that command-line aliases code are not getting executed, but this is usually
+okay.
 
 _
         },
@@ -237,189 +450,24 @@ sub gen_getopt_long_spec_from_meta {
             return [412, "Clash of common opt '$_'"] if $seen_opts{$_};
             $seen_opts{$_}++; $seen_common_opts{$_} = $ospec;
             if ($res->{is_neg}) {
-                $seen_opts{"no$_"}++; $seen_common_opts{"no$_"} = $ospec;
+                $seen_opts{"no$_"}++ ; $seen_common_opts{"no$_"}  = $ospec;
                 $seen_opts{"no-$_"}++; $seen_common_opts{"no-$_"} = $ospec;
             }
         }
     }
 
-    my $args_p = $meta->{args} // {};
-    for my $arg (keys %$args_p) {
-        my $as    = $args_p->{$arg};
-        my $sch   = $as->{schema} // ['any', {}];
-        my $type  = $sch->[0] // '';
-        my $cs    = $sch->[1] // {};
-
-        # XXX normalization of 'of' clause should've been handled by sah itself
-        if ($type eq 'array' && $cs->{of}) {
-            $cs->{of} = normalize_schema($cs->{of});
-        }
-        my $opt = _arg2opt($arg);
-        if ($seen_opts{$opt}) {
-            my $i = 1;
-            my $opt2;
-            while (1) {
-                $opt2 = "$opt-arg" . ($i > 1 ? $i : '');
-                last unless $seen_opts{$opt2};
-                $i++;
-            }
-            $opt = $opt2;
-        }
-
-        my $ospec = _opt2ospec($opt, $sch);
-        my $parsed = parse_getopt_long_opt_spec($ospec);
-        my $is_simple_scalar = $type =~ $re_simple_scalar;
-        my $is_array_of_simple_scalar = $type eq 'array' &&
-            $cs->{of} && $cs->{of}[0] =~ $re_simple_scalar;
-
-        # why we use coderefs here? due to Getopt::Long's behavior. when
-        # @ARGV=qw() and go_spec is ('foo=s' => \$opts{foo}) then %opts will
-        # become (foo=>undef). but if go_spec is ('foo=s' => sub { $opts{foo} =
-        # $_[1] }) then %opts will become (), which is what we prefer, so we can
-        # later differentiate "unspecified" (exists($opts{foo}) == false) and
-        # "specified as undef" (exists($opts{foo}) == true but
-        # defined($opts{foo}) == false).
-
-        my $handler = sub {
-            my ($val, $val_set);
-            if ($is_array_of_simple_scalar) {
-                $rargs->{$arg} //= [];
-                $val_set = 1; $val = $_[1];
-                push @{ $rargs->{$arg} }, $val;
-            } elsif ($is_simple_scalar) {
-                $val_set = 1; $val = $_[1];
-                $rargs->{$arg} = $val;
-            } else {
-                {
-                    my ($success, $e, $decoded);
-                    ($success, $e, $decoded) = _parse_json($_[1]);
-                    if ($success) {
-                        $val_set = 1; $val = $decoded;
-                        $rargs->{$arg} = $val;
-                        last;
-                    }
-                    ($success, $e, $decoded) = _parse_yaml($_[1]);
-                    if ($success) {
-                        $val_set = 1; $val = $decoded;
-                        $rargs->{$arg} = $val;
-                        last;
-                    }
-                    die "Invalid YAML/JSON in arg '$arg'";
-                }
-            }
-            if ($val_set && $as->{cmdline_on_getopt}) {
-                $as->{cmdline_on_getopt}->(
-                    arg=>$arg, value=>$val, args=>$rargs,
-                    opt=>$opt,
-                );
-            }
-        }; # handler
-        $go_spec{$ospec} = $handler;
-        $specmeta{$ospec} = {arg=>$arg, parsed=>$parsed};
-        $seen_opts{$opt}++; $seen_func_opts{$opt} = $arg;
-        if ($parsed->{is_neg}) {
-            $seen_opts{"no$opt"}++; $seen_func_opts{"no$opt"} = $arg;
-            $seen_opts{"no-$opt"}++; $seen_func_opts{"no-$opt"} = $arg;
-        }
-
-        if ($per_arg_json && $type !~ $re_simple_scalar) {
-            my $jopt = "$opt-json";
-            if ($seen_opts{$jopt}) {
-                warn "Clash of option: $jopt, not added";
-            } else {
-                my $jospec = "$jopt=s";
-                $go_spec{$jospec} = sub {
-                    my ($success, $e, $decoded);
-                    ($success, $e, $decoded) = _parse_json($_[1]);
-                    if ($success) {
-                        $rargs->{$arg} = $decoded;
-                    } else {
-                        die "Invalid JSON in option --$jopt: $_[1]: $e";
-                    }
-                };
-                my $parsed = parse_getopt_long_opt_spec($jospec);
-                $specmeta{$jospec} = {arg=>$arg, is_json=>1,  parsed=>$parsed};
-                $seen_opts{$jopt}++; $seen_func_opts{$jopt} = $arg;
-            }
-        }
-        if ($per_arg_yaml && $type !~ $re_simple_scalar) {
-            my $yopt = "$opt-yaml";
-            if ($seen_opts{$yopt}) {
-                warn "Clash of option: $yopt, not added";
-            } else {
-                my $yospec = "$yopt=s";
-                $go_spec{$yospec} = sub {
-                    my ($success, $e, $decoded);
-                    ($success, $e, $decoded) = _parse_yaml($_[1]);
-                    if ($success) {
-                        $rargs->{$arg} = $decoded;
-                    } else {
-                        die "Invalid YAML in option --$yopt: $_[1]: $e";
-                    }
-                };
-                my $parsed = parse_getopt_long_opt_spec($yospec);
-                $specmeta{$yospec} = {arg=>$arg, is_yaml=>1, parsed=>$parsed};
-                $seen_opts{$yopt}++; $seen_func_opts{$yopt} = $arg;
-            }
-        }
-
-        # parse argv_aliases
-        if ($as->{cmdline_aliases}) {
-            for my $al (keys %{$as->{cmdline_aliases}}) {
-                my $alopt = _arg2opt($al);
-                if ($seen_opts{$alopt}) {
-                    warn "Clash of cmdline_alias option $al";
-                    next;
-                }
-                my $alspec = $as->{cmdline_aliases}{$al};
-                my $alsch = $alspec->{schema} // $sch;
-                my $alcode = $alspec->{code};
-                my $alospec;
-                if ($alcode && $alsch->[0] eq 'bool') {
-                    # bool --alias doesn't get --noalias if has code
-                    $alospec = $alopt; # instead of "$alopt!"
-                } else {
-                    $alospec = _opt2ospec($alopt, $alsch);
-                }
-
-                if ($alcode) {
-                    if ($alcode eq 'CODE') {
-                        if ($ignore_converted_code) {
-                            $alcode = sub {};
-                        } else {
-                            return [
-                                502,
-                                join("",
-                                     "Code in cmdline_aliases for arg $arg ",
-                                     "got converted into string, probably ",
-                                     "because of JSON/YAML transport"),
-                            ];
-                        }
-                    }
-                    $go_spec{$alospec} = sub {$alcode->($rargs, $_[1])};
-                } else {
-                    $go_spec{$alospec} = $handler;
-                }
-                my $parsed = parse_getopt_long_opt_spec($alospec);
-                $specmeta{$alospec} = {
-                    alias     => $al,
-                    is_alias  => 1,
-                    alias_for => $ospec,
-                    arg       => $arg,
-                    is_code   => $alcode ? 1:0,
-                    parsed    => $parsed,
-                };
-                push @{$specmeta{$ospec}{($alcode ? '':'non').'code_aliases'}},
-                    $alospec;
-                $seen_opts{$alopt}++; $seen_func_opts{$alopt} = $arg;
-                if ($parsed->{is_neg}) {
-                    $seen_opts{"no$alopt"}++; $seen_func_opts{"no$alopt"} = $arg;
-                    $seen_opts{"no-$alopt"}++; $seen_func_opts{"no-$alopt"} = $arg;
-                }
-            }
-        }
-
-    } # for arg
+    my $res = _args2opts(
+        argprefix        => "",
+        parent_args      => \%fargs,
+        meta             => $meta,
+        seen_opts        => \%seen_opts,
+        seen_common_opts => \%seen_common_opts,
+        seen_func_opts   => \%seen_func_opts,
+        rargs            => $rargs,
+        go_spec          => \%go_spec,
+        specmeta         => \%specmeta,
+    );
+    return $res if $res;
 
     my $opts        = [sort(map {length($_)>1 ? "--$_":"-$_"} keys %seen_opts)];
     my $common_opts = [sort(map {length($_)>1 ? "--$_":"-$_"} keys %seen_common_opts)];
@@ -435,14 +483,14 @@ sub gen_getopt_long_spec_from_meta {
         }
         $opts_by_common->{$ospec} = [sort @opts];
     }
+
     my $opts_by_arg = {};
-    for my $arg (keys %$args_p) {
-        my @opts;
-        for (keys %seen_func_opts) {
-            next unless $seen_func_opts{$_} eq $arg;
-            push @opts, (length($_)>1 ? "--$_":"-$_");
-        }
-        $opts_by_arg->{$arg} = [sort @opts];
+    for (keys %seen_func_opts) {
+        my $fqarg = $seen_func_opts{$_};
+        push @{ $opts_by_arg->{$fqarg} }, length($_)>1 ? "--$_":"-$_";
+    }
+    for (keys %$opts_by_arg) {
+        $opts_by_arg->{$_} = [sort @{ $opts_by_arg->{$_} }];
     }
 
     [200, "OK", \%go_spec,
@@ -761,12 +809,12 @@ sub get_args_from_argv {
                 if ($as->{cmdline_on_getopt}) {
                     if ($as->{greedy}) {
                         $as->{cmdline_on_getopt}->(
-                            arg=>$name, value=>$_, args=>$rargs,
+                            arg=>$name, fqarg=>$name, value=>$_, args=>$rargs,
                             opt=>undef, # this marks that value is retrieved from cmdline arg
                         ) for @$val;
                     } else {
                         $as->{cmdline_on_getopt}->(
-                            arg=>$name, value=>$val, args=>$rargs,
+                            arg=>$name, fqarg=>$name, value=>$val, args=>$rargs,
                             opt=>undef, # this marks that value is retrieved from cmdline arg
                         );
                     }
@@ -814,7 +862,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-This document describes version 0.51 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-09-03.
+This document describes version 0.52 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-10-09.
 
 =head1 SYNOPSIS
 
@@ -916,7 +964,10 @@ Whether to ignore coderefs converted to string.
 
 Across network through JSON encoding, coderef in metadata (e.g. in
 C<cmdline_aliases> property) usually gets converted to string C<CODE>. In some
-cases, like for tab completion, this is harmless so you can turn this option on.
+cases, like for tab completion, this is pretty harmless so you can turn this
+option on. For example, in the case of C<cmdline_aliases>, the effect is just
+that command-line aliases code are not getting executed, but this is usually
+okay.
 
 =item * B<meta>* => I<hash>
 

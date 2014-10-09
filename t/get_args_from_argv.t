@@ -399,8 +399,8 @@ test_getargs(meta=>$meta, argv=>[qw/-X=foo/],
         posttest => sub {
             my $res = shift;
             is_deeply(\@arg, [
-                {arg=>'arg', args=>$res->[2], opt=>'arg', value=>1},
-                {arg=>'arg', args=>$res->[2], opt=>'arg', value=>2},
+                {arg=>'arg', fqarg=>'arg', args=>$res->[2], opt=>'arg', value=>1},
+                {arg=>'arg', fqarg=>'arg', args=>$res->[2], opt=>'arg', value=>2},
             ]) or diag explain \@arg;
         },
     );
@@ -412,7 +412,7 @@ test_getargs(meta=>$meta, argv=>[qw/-X=foo/],
         posttest => sub {
             my $res = shift;
             is_deeply(\@pos, [
-                {arg=>'pos', args=>$res->[2], opt=>'pos', value=>1},
+                {arg=>'pos', fqarg=>'pos', args=>$res->[2], opt=>'pos', value=>1},
             ]) or diag explain \@pos;
         },
     );
@@ -424,7 +424,7 @@ test_getargs(meta=>$meta, argv=>[qw/-X=foo/],
         posttest => sub {
             my $res = shift;
             is_deeply(\@pos, [
-                {arg=>'pos', args=>$res->[2], opt=>undef, value=>1},
+                {arg=>'pos', fqarg=>'pos', args=>$res->[2], opt=>undef, value=>1},
             ]) or diag explain \@pos;
         },
     );
@@ -440,8 +440,8 @@ test_getargs(meta=>$meta, argv=>[qw/-X=foo/],
         posttest => sub {
             my $res = shift;
             is_deeply(\@pos, [
-                {arg=>'pos', args=>$res->[2], opt=>'pos', value=>1},
-                {arg=>'pos', args=>$res->[2], opt=>'pos', value=>2},
+                {arg=>'pos', fqarg=>'pos', args=>$res->[2], opt=>'pos', value=>1},
+                {arg=>'pos', fqarg=>'pos', args=>$res->[2], opt=>'pos', value=>2},
             ]) or diag explain \@pos;
         },
     );
@@ -453,8 +453,8 @@ test_getargs(meta=>$meta, argv=>[qw/-X=foo/],
         posttest => sub {
             my $res = shift;
             is_deeply(\@pos, [
-                {arg=>'pos', args=>$res->[2], opt=>undef, value=>1},
-                {arg=>'pos', args=>$res->[2], opt=>undef, value=>2},
+                {arg=>'pos', fqarg=>'pos', args=>$res->[2], opt=>undef, value=>1},
+                {arg=>'pos', fqarg=>'pos', args=>$res->[2], opt=>undef, value=>2},
             ]) or diag explain \@pos;
         },
     );

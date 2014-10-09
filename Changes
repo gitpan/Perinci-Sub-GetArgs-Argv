@@ -1,5 +1,10 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.52    2014-10-09 (PERLANCAR)
+
+	- Support argument submetadata (Rinci 1.1.55).
+
+
 0.51     2014-09-03 (PERLANCAR)
 
          - Add option: ignore_converted_code (this option is needed e.g. by

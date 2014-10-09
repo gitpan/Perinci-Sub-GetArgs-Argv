@@ -20,6 +20,7 @@ my $meta = {
         int1       => {schema=>'int', cmdline_aliases=>{set_zero=>{schema=>'bool', code=>sub{}}}},
         bool1      => {schema=>'bool'},
         help       => {schema=>['bool', is=>1]},
+        hash1      => {schema=>'hash', meta=>{v=>1.1, args=>{a=>{schema=>'str'}}}},
     },
 };
 
@@ -79,6 +80,10 @@ my $expected_res = [
         'bool1!' => 'CODE',
         'set-zero' => 'CODE', # XXX should be 'set-zero'
         'help-arg' => 'CODE',
+        'hash1=s' => 'CODE',
+        'hash1-json=s' => 'CODE',
+        'hash1-yaml=s' => 'CODE',
+        'hash1-a=s' => 'CODE',
     },
     {
         'func.specmeta' => {
@@ -87,16 +92,20 @@ my $expected_res = [
             'verbose!' => {arg=>undef, parsed=>'PARSED',},
             'format=s' => {arg=>undef, parsed=>'PARSED',},
             'format-options=s' => {arg=>undef, parsed=>'PARSED',},
-            'str-arg1=s' => {arg=>'str_arg1', parsed=>'PARSED',},
-            'ary-arg1=s@' => {arg=>'ary.arg1', parsed=>'PARSED',},
-            'ary-arg1-json=s' => {arg=>'ary.arg1', is_json=>1, parsed=>'PARSED',},
-            'ary-arg1-yaml=s' => {arg=>'ary.arg1', is_yaml=>1, parsed=>'PARSED',},
-            'float1=f' => {arg=>'float1', parsed=>'PARSED', noncode_aliases=>['f=f'],},
-            'f=f' => {is_alias=>1, alias=>'f', alias_for=>'float1=f', is_code=>0, arg=>'float1', parsed=>'PARSED',},
-            'int1=i' => {arg=>'int1', parsed=>'PARSED', code_aliases=>['set-zero'],},
-            'set-zero' => {is_alias=>1, alias=>'set_zero', alias_for=>'int1=i', is_code=>1, arg=>'int1', parsed=>'PARSED',},
-            'bool1!' => {arg=>'bool1', parsed=>'PARSED',},
-            'help-arg' => {arg=>'help', parsed=>'PARSED',},
+            'str-arg1=s' => {arg=>'str_arg1', fqarg=>'str_arg1', parsed=>'PARSED',},
+            'ary-arg1=s@' => {arg=>'ary.arg1', fqarg=>'ary.arg1', parsed=>'PARSED',},
+            'ary-arg1-json=s' => {arg=>'ary.arg1', fqarg=>'ary.arg1', is_json=>1, parsed=>'PARSED',},
+            'ary-arg1-yaml=s' => {arg=>'ary.arg1', fqarg=>'ary.arg1', is_yaml=>1, parsed=>'PARSED',},
+            'float1=f' => {arg=>'float1', fqarg=>'float1', parsed=>'PARSED', noncode_aliases=>['f=f'],},
+            'f=f' => {is_alias=>1, alias=>'f', alias_for=>'float1=f', is_code=>0, arg=>'float1', fqarg=>'float1', parsed=>'PARSED',},
+            'int1=i' => {arg=>'int1', fqarg=>'int1', parsed=>'PARSED', code_aliases=>['set-zero'],},
+            'set-zero' => {is_alias=>1, alias=>'set_zero', alias_for=>'int1=i', is_code=>1, arg=>'int1', fqarg=>'int1', parsed=>'PARSED',},
+            'bool1!' => {arg=>'bool1', fqarg=>'bool1', parsed=>'PARSED',},
+            'help-arg' => {arg=>'help', fqarg=>'help', parsed=>'PARSED',},
+            'hash1=s' => {arg=>'hash1', fqarg=>'hash1', parsed=>'PARSED',},
+            'hash1-json=s' => {arg=>'hash1', fqarg=>'hash1', is_json=>1, parsed=>'PARSED',},
+            'hash1-yaml=s' => {arg=>'hash1', fqarg=>'hash1', is_yaml=>1, parsed=>'PARSED',},
+            'hash1-a=s' => {arg=>'a', fqarg=>'hash1::a', parsed=>'PARSED',},
         },
         'func.opts' => [
             '--ary-arg1',
@@ -106,6 +115,10 @@ my $expected_res = [
             '--float1',
             '--format',
             '--format-options',
+            '--hash1',
+            '--hash1-a',
+            '--hash1-json',
+            '--hash1-yaml',
             '--help',
             '--help-arg',
             '--int1',
@@ -140,6 +153,10 @@ my $expected_res = [
             '--ary-arg1-yaml',
             '--bool1',
             '--float1',
+            '--hash1',
+            '--hash1-a',
+            '--hash1-json',
+            '--hash1-yaml',
             '--help-arg',
             '--int1',
             '--no-bool1',
@@ -172,7 +189,15 @@ my $expected_res = [
             ],
             'str_arg1' => [
                 '--str-arg1',
-            ]
+            ],
+            'hash1' => [
+                '--hash1',
+                '--hash1-json',
+                '--hash1-yaml',
+            ],
+            'hash1::a' => [
+                '--hash1-a',
+            ],
         },
         'func.opts_by_common' => {
             'format-options=s' => [

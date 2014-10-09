@@ -3,9 +3,9 @@ NAME
     arguments (@ARGV)
 
 VERSION
-    This document describes version 0.51 of Perinci::Sub::GetArgs::Argv
+    This document describes version 0.52 of Perinci::Sub::GetArgs::Argv
     (from Perl distribution Perinci-Sub-GetArgs-Argv), released on
-    2014-09-03.
+    2014-10-09.
 
 SYNOPSIS
      use Perinci::Sub::GetArgs::Argv;
@@ -102,8 +102,10 @@ FUNCTIONS
 
         Across network through JSON encoding, coderef in metadata (e.g. in
         "cmdline_aliases" property) usually gets converted to string "CODE".
-        In some cases, like for tab completion, this is harmless so you can
-        turn this option on.
+        In some cases, like for tab completion, this is pretty harmless so
+        you can turn this option on. For example, in the case of
+        "cmdline_aliases", the effect is just that command-line aliases code
+        are not getting executed, but this is usually okay.
 
     *   meta* => *hash*
 
