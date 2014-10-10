@@ -3,9 +3,9 @@ NAME
     arguments (@ARGV)
 
 VERSION
-    This document describes version 0.52 of Perinci::Sub::GetArgs::Argv
+    This document describes version 0.53 of Perinci::Sub::GetArgs::Argv
     (from Perl distribution Perinci-Sub-GetArgs-Argv), released on
-    2014-10-09.
+    2014-10-10.
 
 SYNOPSIS
      use Perinci::Sub::GetArgs::Argv;
@@ -25,6 +25,10 @@ DESCRIPTION
 FUNCTIONS
   gen_getopt_long_spec_from_meta(%args) -> [status, msg, result, meta]
     Generate Getopt::Long spec from Rinci function metadata.
+
+    This routine will produce a "Getopt::Long" specification from Rinci
+    function metadata, as well as some more data structure in the result
+    metadata to help producing a command-line help/usage message.
 
     Function arguments will be mapped to command-line options with the same
     name, with non-alphanumeric characters changed to "-" ("-" is preferred

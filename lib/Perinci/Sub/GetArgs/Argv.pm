@@ -1,7 +1,7 @@
 package Perinci::Sub::GetArgs::Argv;
 
-our $DATE = '2014-10-09'; # DATE
-our $VERSION = '0.52'; # VERSION
+our $DATE = '2014-10-10'; # DATE
+our $VERSION = '0.53'; # VERSION
 
 use 5.010001;
 use strict;
@@ -67,6 +67,8 @@ sub _arg2opt {
     $opt;
 }
 
+# return Getopt::Long option spec and its parsed structure, we do this to avoid
+# having to call parse_getopt_long_opt_spec().
 sub _opt2ospec {
     my ($opt, $schema) = @_;
     my $type = $schema->[0];
@@ -78,13 +80,14 @@ sub _opt2ospec {
             # single-letter option like -b doesn't get --nob.
             # [bool=>{is=>1}] also means it's a flag and should not get
             # --nofoo.
-            return $opt;
+            return ($opt, {opts=>[$opt]});
         } else {
-            return "$opt!";
+            return ("$opt!", {opts=>[$opt], is_neg=>1});
         }
     } else {
-        return "$opt=" . ($type eq 'int' ? 'i' : $type eq 'float' ? 'f' :
-                              $is_array_of_simple_scalar ? 's@' : 's');
+        my $t = ($type eq 'int' ? 'i' : $type eq 'float' ? 'f' :
+                     $is_array_of_simple_scalar ? 's@' : 's');
+        return ("$opt=$t", {opts=>[$opt], desttype=>"", type=>$t});
     }
 }
 
@@ -126,8 +129,7 @@ sub _args2opts {
             $opt = $opt2;
         }
 
-        my $ospec = _opt2ospec($opt, $sch);
-        my $parsed = parse_getopt_long_opt_spec($ospec);
+        my ($ospec, $parsed) = _opt2ospec($opt, $sch);
         my $is_simple_scalar = $type =~ $re_simple_scalar;
         my $is_array_of_simple_scalar = $type eq 'array' &&
             $cs->{of} && $cs->{of}[0] =~ $re_simple_scalar;
@@ -188,6 +190,7 @@ sub _args2opts {
                 warn "Clash of option: $jopt, not added";
             } else {
                 my $jospec = "$jopt=s";
+                my $parsed = {type=>"s", opts=>[$jopt]};
                 $go_spec->{$jospec} = sub {
                     my ($success, $e, $decoded);
                     ($success, $e, $decoded) = _parse_json($_[1]);
@@ -197,7 +200,6 @@ sub _args2opts {
                         die "Invalid JSON in option --$jopt: $_[1]: $e";
                     }
                 };
-                my $parsed = parse_getopt_long_opt_spec($jospec);
                 $specmeta->{$jospec} = {arg=>$arg, fqarg=>$fqarg, is_json=>1, parsed=>$parsed};
                 $seen_opts->{$jopt}++; $seen_func_opts->{$jopt} = $fqarg;
             }
@@ -208,6 +210,7 @@ sub _args2opts {
                 warn "Clash of option: $yopt, not added";
             } else {
                 my $yospec = "$yopt=s";
+                my $parsed = {type=>"s", opts=>[$yopt]};
                 $go_spec->{$yospec} = sub {
                     my ($success, $e, $decoded);
                     ($success, $e, $decoded) = _parse_yaml($_[1]);
@@ -217,7 +220,6 @@ sub _args2opts {
                         die "Invalid YAML in option --$yopt: $_[1]: $e";
                     }
                 };
-                my $parsed = parse_getopt_long_opt_spec($yospec);
                 $specmeta->{$yospec} = {arg=>$arg, fqarg=>$fqarg, is_yaml=>1, parsed=>$parsed};
                 $seen_opts->{$yopt}++; $seen_func_opts->{$yopt} = $fqarg;
             }
@@ -235,11 +237,13 @@ sub _args2opts {
                 my $alsch = $alspec->{schema} // $sch;
                 my $alcode = $alspec->{code};
                 my $alospec;
+                my $parsed;
                 if ($alcode && $alsch->[0] eq 'bool') {
                     # bool --alias doesn't get --noalias if has code
                     $alospec = $alopt; # instead of "$alopt!"
+                    $parsed = {opts=>[$alopt]};
                 } else {
-                    $alospec = _opt2ospec($alopt, $alsch);
+                    ($alospec, $parsed) = _opt2ospec($alopt, $alsch);
                 }
 
                 if ($alcode) {
@@ -261,7 +265,6 @@ sub _args2opts {
                 } else {
                     $go_spec->{$alospec} = $handler;
                 }
-                my $parsed = parse_getopt_long_opt_spec($alospec);
                 $specmeta->{$alospec} = {
                     alias     => $al,
                     is_alias  => 1,
@@ -302,6 +305,10 @@ $SPEC{gen_getopt_long_spec_from_meta} = {
     v           => 1.1,
     summary     => 'Generate Getopt::Long spec from Rinci function metadata',
     description => <<'_',
+
+This routine will produce a `Getopt::Long` specification from Rinci function
+metadata, as well as some more data structure in the result metadata to help
+producing a command-line help/usage message.
 
 Function arguments will be mapped to command-line options with the same name,
 with non-alphanumeric characters changed to `-` (`-` is preferred over `_`
@@ -862,7 +869,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-This document describes version 0.52 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-10-09.
+This document describes version 0.53 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-10-10.
 
 =head1 SYNOPSIS
 
@@ -887,6 +894,10 @@ This module has L<Rinci> metadata.
 =head2 gen_getopt_long_spec_from_meta(%args) -> [status, msg, result, meta]
 
 Generate Getopt::Long spec from Rinci function metadata.
+
+This routine will produce a C<Getopt::Long> specification from Rinci function
+metadata, as well as some more data structure in the result metadata to help
+producing a command-line help/usage message.
 
 Function arguments will be mapped to command-line options with the same name,
 with non-alphanumeric characters changed to C<-> (C<-> is preferred over C<_>
