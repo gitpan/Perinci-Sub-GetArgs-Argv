@@ -37,7 +37,7 @@
             "Perinci::Sub::GetArgs::Array" : "0.14",
             "Perinci::Sub::Normalize" : "0.07",
             "Perinci::Sub::Util" : "0",
-            "Rinci" : "v1.1.55",
+            "Rinci" : "v1.1.56",
             "YAML::Syck" : "0",
             "perl" : "5.010001"
          }
@@ -64,7 +64,7 @@
          "web" : "https://github.com/perlancar/perl-Perinci-Sub-GetArgs-Argv"
       }
    },
-   "version" : "0.53",
+   "version" : "0.54",
    "x_Dist_Zilla" : {
       "perl" : {
          "version" : "5.018002"

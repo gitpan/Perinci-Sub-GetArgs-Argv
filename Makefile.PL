@@ -28,7 +28,7 @@ my %WriteMakefileArgs = (
     "Perinci::Sub::GetArgs::Array" => "0.14",
     "Perinci::Sub::Normalize" => "0.07",
     "Perinci::Sub::Util" => 0,
-    "Rinci" => "v1.1.55",
+    "Rinci" => "v1.1.56",
     "YAML::Syck" => 0
   },
   "TEST_REQUIRES" => {
@@ -38,7 +38,7 @@ my %WriteMakefileArgs = (
     "IPC::Open3" => 0,
     "Test::More" => "0.98"
   },
-  "VERSION" => "0.53",
+  "VERSION" => "0.54",
   "test" => {
     "TESTS" => "t/*.t"
   }
@@ -58,7 +58,7 @@ my %FallbackPrereqs = (
   "Perinci::Sub::GetArgs::Array" => "0.14",
   "Perinci::Sub::Normalize" => "0.07",
   "Perinci::Sub::Util" => 0,
-  "Rinci" => "v1.1.55",
+  "Rinci" => "v1.1.56",
   "Test::More" => "0.98",
   "YAML::Syck" => 0
 );

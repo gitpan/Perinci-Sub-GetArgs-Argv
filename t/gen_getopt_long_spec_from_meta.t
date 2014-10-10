@@ -21,6 +21,7 @@ my $meta = {
         bool1      => {schema=>'bool'},
         help       => {schema=>['bool', is=>1]},
         hash1      => {schema=>'hash', meta=>{v=>1.1, args=>{a=>{schema=>'str'}}}},
+        ary1       => {schema=>'array', element_meta=>{v=>1.1, args=>{a=>{schema=>'str'}}}},
     },
 };
 
@@ -84,6 +85,10 @@ my $expected_res = [
         'hash1-json=s' => 'CODE',
         'hash1-yaml=s' => 'CODE',
         'hash1-a=s' => 'CODE',
+        'ary1=s' => 'CODE',
+        'ary1-json=s' => 'CODE',
+        'ary1-yaml=s' => 'CODE',
+        'ary1-a=s' => 'CODE',
     },
     {
         'func.specmeta' => {
@@ -106,11 +111,19 @@ my $expected_res = [
             'hash1-json=s' => {arg=>'hash1', fqarg=>'hash1', is_json=>1, parsed=>'PARSED',},
             'hash1-yaml=s' => {arg=>'hash1', fqarg=>'hash1', is_yaml=>1, parsed=>'PARSED',},
             'hash1-a=s' => {arg=>'a', fqarg=>'hash1::a', parsed=>'PARSED',},
+            'ary1=s' => {arg=>'ary1', fqarg=>'ary1', parsed=>'PARSED',},
+            'ary1-json=s' => {arg=>'ary1', fqarg=>'ary1', is_json=>1, parsed=>'PARSED',},
+            'ary1-yaml=s' => {arg=>'ary1', fqarg=>'ary1', is_yaml=>1, parsed=>'PARSED',},
+            'ary1-a=s' => {arg=>'a', fqarg=>'ary1::a', parsed=>'PARSED',},
         },
         'func.opts' => [
             '--ary-arg1',
             '--ary-arg1-json',
             '--ary-arg1-yaml',
+            '--ary1',
+            '--ary1-a',
+            '--ary1-json',
+            '--ary1-yaml',
             '--bool1',
             '--float1',
             '--format',
@@ -151,6 +164,10 @@ my $expected_res = [
             '--ary-arg1',
             '--ary-arg1-json',
             '--ary-arg1-yaml',
+            '--ary1',
+            '--ary1-a',
+            '--ary1-json',
+            '--ary1-yaml',
             '--bool1',
             '--float1',
             '--hash1',
@@ -197,6 +214,14 @@ my $expected_res = [
             ],
             'hash1::a' => [
                 '--hash1-a',
+            ],
+            'ary1' => [
+                '--ary1',
+                '--ary1-json',
+                '--ary1-yaml',
+            ],
+            'ary1::a' => [
+                '--ary1-a',
             ],
         },
         'func.opts_by_common' => {

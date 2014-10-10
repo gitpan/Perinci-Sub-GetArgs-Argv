@@ -567,6 +567,37 @@ subtest 'arg submetadata' => sub {
     );
 };
 
+subtest 'arg element submetadata' => sub {
+    my $meta = {
+        v => 1.1,
+        args => {
+            a => {schema => 'str*', req=>1},
+            b => {schema => 'str*'},
+            c => {
+                schema => 'array*',
+                element_meta => {
+                    v => 1.1,
+                    args => {
+                        a => {schema => 'str*'},
+                        b => {schema => 'str*'},
+                    },
+                },
+            },
+        },
+    };
+
+    test_getargs(
+        meta       => $meta,
+        argv       => [qw/--a 1 --b 2 --c-a 3 --c-b 4/],
+        args       => {a=>1, b=>2, c=>[{a=>3, b=>4}]},
+    );
+    test_getargs(
+        meta       => $meta,
+        argv       => [qw/--a 1 --b 2 --c-a 3 --c-a 4 --c-b 5/],
+        args       => {a=>1, b=>2, c=>[{a=>3, b=>5}, {a=>4}]},
+    );
+};
+
 DONE_TESTING:
 done_testing;
 
