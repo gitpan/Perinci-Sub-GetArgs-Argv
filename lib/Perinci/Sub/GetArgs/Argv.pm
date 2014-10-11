@@ -1,7 +1,7 @@
 package Perinci::Sub::GetArgs::Argv;
 
-our $DATE = '2014-10-10'; # DATE
-our $VERSION = '0.54'; # VERSION
+our $DATE = '2014-10-11'; # DATE
+our $VERSION = '0.55'; # VERSION
 
 use 5.010001;
 use strict;
@@ -252,7 +252,8 @@ sub _args2opts {
                     next;
                 }
                 my $alspec = $as->{cmdline_aliases}{$al};
-                my $alsch = $alspec->{schema} // $sch;
+                my $alsch = $alspec->{schema} //
+                    $alspec->{is_flag} ? [bool=>{req=>1,is=>1}] : $sch;
                 my $alcode = $alspec->{code};
                 my $alospec;
                 my $parsed;
@@ -278,8 +279,22 @@ sub _args2opts {
                             ];
                         }
                     }
-                    $go_spec->{$alospec} =
-                        sub {$alcode->($rargs, $_[1])};
+                    # alias handler
+                    $go_spec->{$alospec} = sub {
+
+                        # do the same like in arg handler
+                        my $num_called = ++$stash->{called}{$arg};
+                        my $rargs = do {
+                            if (ref($rargs) eq 'ARRAY') {
+                                $rargs->[$num_called-1] //= {};
+                                $rargs->[$num_called-1];
+                            } else {
+                                $rargs;
+                            }
+                        };
+
+                        $alcode->($rargs, $_[1]);
+                    };
                 } else {
                     $go_spec->{$alospec} = $handler;
                 }
@@ -899,7 +914,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-This document describes version 0.54 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-10-10.
+This document describes version 0.55 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-10-11.
 
 =head1 SYNOPSIS
 
@@ -987,15 +1002,15 @@ option specification), C<handler> (Getopt::Long handler). Will be passed to
 C<get_args_from_argv()>. Example:
 
  {
-     help =E<gt> {
-         getopt  =E<gt> 'help|h|?',
-         handler =E<gt> sub { ... },
-         summary =E<gt> 'Display help and exit',
+     help => {
+         getopt  => 'help|h|?',
+         handler => sub { ... },
+         summary => 'Display help and exit',
      },
-     version =E<gt> {
-         getopt  =E<gt> 'version|v',
-         handler =E<gt> sub { ... },
-         summary =E<gt> 'Display version and exit',
+     version => {
+         getopt  => 'version|v',
+         handler => sub { ... },
+         summary => 'Display version and exit',
      },
  }
 
@@ -1090,15 +1105,15 @@ option specification), C<handler> (Getopt::Long handler). Will be passed to
 C<get_args_from_argv()>. Example:
 
  {
-     help =E<gt> {
-         getopt  =E<gt> 'help|h|?',
-         handler =E<gt> sub { ... },
-         summary =E<gt> 'Display help and exit',
+     help => {
+         getopt  => 'help|h|?',
+         handler => sub { ... },
+         summary => 'Display help and exit',
      },
-     version =E<gt> {
-         getopt  =E<gt> 'version|v',
-         handler =E<gt> sub { ... },
-         summary =E<gt> 'Display version and exit',
+     version => {
+         getopt  => 'version|v',
+         handler => sub { ... },
+         summary => 'Display version and exit',
      },
  }
 
@@ -1185,13 +1200,17 @@ that contains extra information.
 
 Error codes:
 
-* 400 - Error in Getopt::Long option specification, e.g. in common_opts.
+=over
 
-* 500 - failure in GetOptions, meaning argv is not valid according to metadata
-  specification (only if 'strict' mode is enabled).
+=item * 400 - Error in Getopt::Long option specification, e.g. in common_opts.
 
-* 502 - coderef in cmdline_aliases got converted into a string, probably because
-  the metadata was transported (e.g. through Riap::HTTP/Riap::Simple).
+=item * 500 - failure in GetOptions, meaning argv is not valid according to metadata
+specification (only if 'strict' mode is enabled).
+
+=item * 502 - coderef in cmdline_aliases got converted into a string, probably because
+the metadata was transported (e.g. through Riap::HTTP/Riap::Simple).
+
+=back
 
 =head1 FAQ
 
@@ -1210,7 +1229,7 @@ Please visit the project's homepage at L<https://metacpan.org/release/Perinci-Su
 
 =head1 SOURCE
 
-Source repository is at L<https://github.com/perlancar/perl-Perinci-Sub-GetArgs-Argv>.
+Source repository is at L<https://github.com/sharyanto/perl-Perinci-Sub-GetArgs-Argv>.
 
 =head1 BUGS
 

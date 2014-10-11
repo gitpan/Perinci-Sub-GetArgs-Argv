@@ -11,7 +11,7 @@ build_requires:
 configure_requires:
   ExtUtils::MakeMaker: '6.30'
 dynamic_config: 0
-generated_by: 'Dist::Zilla version 5.019, CPAN::Meta::Converter version 2.141170'
+generated_by: 'Dist::Zilla version 5.015, CPAN::Meta::Converter version 2.140640'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -26,77 +26,77 @@ requires:
   Perinci::Sub::GetArgs::Array: '0.14'
   Perinci::Sub::Normalize: '0.07'
   Perinci::Sub::Util: '0'
-  Rinci: v1.1.56
+  Rinci: v1.1.57
   YAML::Syck: '0'
   perl: '5.010001'
 resources:
   bugtracker: https://rt.cpan.org/Public/Dist/Display.html?Name=Perinci-Sub-GetArgs-Argv
   homepage: https://metacpan.org/release/Perinci-Sub-GetArgs-Argv
-  repository: git://github.com/perlancar/perl-Perinci-Sub-GetArgs-Argv.git
-version: '0.54'
+  repository: git://github.com/sharyanto/perl-Perinci-Sub-GetArgs-Argv.git
+version: '0.55'
 x_Dist_Zilla:
   perl:
-    version: '5.018002'
+    version: '5.018001'
   plugins:
     -
       class: Dist::Zilla::Plugin::GatherDir
       name: '@Author::PERLANCAR/@Filter/GatherDir'
-      version: '5.019'
+      version: '5.015'
     -
       class: Dist::Zilla::Plugin::PruneCruft
       name: '@Author::PERLANCAR/@Filter/PruneCruft'
-      version: '5.019'
+      version: '5.015'
     -
       class: Dist::Zilla::Plugin::ManifestSkip
       name: '@Author::PERLANCAR/@Filter/ManifestSkip'
-      version: '5.019'
+      version: '5.015'
     -
       class: Dist::Zilla::Plugin::MetaYAML
       name: '@Author::PERLANCAR/@Filter/MetaYAML'
-      version: '5.019'
+      version: '5.015'
     -
       class: Dist::Zilla::Plugin::License
       name: '@Author::PERLANCAR/@Filter/License'
-      version: '5.019'
+      version: '5.015'
     -
       class: Dist::Zilla::Plugin::PodCoverageTests
       name: '@Author::PERLANCAR/@Filter/PodCoverageTests'
-      version: '5.019'
+      version: '5.015'
     -
       class: Dist::Zilla::Plugin::PodSyntaxTests
       name: '@Author::PERLANCAR/@Filter/PodSyntaxTests'
-      version: '5.019'
+      version: '5.015'
     -
       class: Dist::Zilla::Plugin::ExtraTests
       name: '@Author::PERLANCAR/@Filter/ExtraTests'
-      version: '5.019'
+      version: '5.015'
     -
       class: Dist::Zilla::Plugin::ExecDir
       name: '@Author::PERLANCAR/@Filter/ExecDir'
-      version: '5.019'
+      version: '5.015'
     -
       class: Dist::Zilla::Plugin::ShareDir
       name: '@Author::PERLANCAR/@Filter/ShareDir'
-      version: '5.019'
+      version: '5.015'
     -
       class: Dist::Zilla::Plugin::MakeMaker
       config:
         Dist::Zilla::Role::TestRunner:
           default_jobs: 1
       name: '@Author::PERLANCAR/@Filter/MakeMaker'
-      version: '5.019'
+      version: '5.015'
     -
       class: Dist::Zilla::Plugin::Manifest
       name: '@Author::PERLANCAR/@Filter/Manifest'
-      version: '5.019'
+      version: '5.015'
     -
       class: Dist::Zilla::Plugin::ConfirmRelease
       name: '@Author::PERLANCAR/@Filter/ConfirmRelease'
-      version: '5.019'
+      version: '5.015'
     -
       class: Dist::Zilla::Plugin::UploadToCPAN
       name: '@Author::PERLANCAR/@Filter/UploadToCPAN'
-      version: '5.019'
+      version: '5.015'
     -
       class: Dist::Zilla::Plugin::PERLANCAR::MetaResources
       name: '@Author::PERLANCAR/PERLANCAR::MetaResources'
@@ -112,11 +112,11 @@ x_Dist_Zilla:
     -
       class: Dist::Zilla::Plugin::MetaJSON
       name: '@Author::PERLANCAR/MetaJSON'
-      version: '5.019'
+      version: '5.015'
     -
       class: Dist::Zilla::Plugin::MetaConfig
       name: '@Author::PERLANCAR/MetaConfig'
-      version: '5.019'
+      version: '5.015'
     -
       class: Dist::Zilla::Plugin::OurDate
       name: '@Author::PERLANCAR/OurDate'
@@ -218,7 +218,7 @@ x_Dist_Zilla:
     -
       class: Dist::Zilla::Plugin::PruneFiles
       name: '@Author::PERLANCAR/PruneFiles'
-      version: '5.019'
+      version: '5.015'
     -
       class: Dist::Zilla::Plugin::ReadmeFromPod
       name: '@Author::PERLANCAR/ReadmeFromPod'
@@ -226,7 +226,7 @@ x_Dist_Zilla:
     -
       class: Dist::Zilla::Plugin::Rinci::Validate
       name: '@Author::PERLANCAR/Rinci::Validate'
-      version: '0.18'
+      version: '0.15'
     -
       class: Dist::Zilla::Plugin::SetScriptShebang
       name: '@Author::PERLANCAR/SetScriptShebang'
@@ -245,7 +245,7 @@ x_Dist_Zilla:
           script_finder:
             - ':ExecFiles'
       name: '@Author::PERLANCAR/Test::Compile'
-      version: '2.040'
+      version: '2.039'
     -
       class: Dist::Zilla::Plugin::Test::Rinci
       name: '@Author::PERLANCAR/Test::Rinci'
@@ -257,7 +257,7 @@ x_Dist_Zilla:
           phase: test
           type: requires
       name: TestRequires
-      version: '5.019'
+      version: '5.015'
     -
       class: Dist::Zilla::Plugin::Prereqs
       config:
@@ -265,41 +265,41 @@ x_Dist_Zilla:
           phase: runtime
           type: requires
       name: Prereqs
-      version: '5.019'
+      version: '5.015'
     -
       class: Dist::Zilla::Plugin::FinderCode
       name: ':InstallModules'
-      version: '5.019'
+      version: '5.015'
     -
       class: Dist::Zilla::Plugin::FinderCode
       name: ':IncModules'
-      version: '5.019'
+      version: '5.015'
     -
       class: Dist::Zilla::Plugin::FinderCode
       name: ':TestFiles'
-      version: '5.019'
+      version: '5.015'
     -
       class: Dist::Zilla::Plugin::FinderCode
       name: ':ExecFiles'
-      version: '5.019'
+      version: '5.015'
     -
       class: Dist::Zilla::Plugin::FinderCode
       name: ':ShareFiles'
-      version: '5.019'
+      version: '5.015'
     -
       class: Dist::Zilla::Plugin::FinderCode
       name: ':MainModule'
-      version: '5.019'
+      version: '5.015'
     -
       class: Dist::Zilla::Plugin::FinderCode
       name: ':AllFiles'
-      version: '5.019'
+      version: '5.015'
     -
       class: Dist::Zilla::Plugin::FinderCode
       name: ':NoFiles'
-      version: '5.019'
+      version: '5.015'
   zilla:
     class: Dist::Zilla::Dist::Builder
     config:
       is_trial: '0'
-    version: '5.019'
+    version: '5.015'

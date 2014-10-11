@@ -3,9 +3,9 @@ NAME
     arguments (@ARGV)
 
 VERSION
-    This document describes version 0.54 of Perinci::Sub::GetArgs::Argv
+    This document describes version 0.55 of Perinci::Sub::GetArgs::Argv
     (from Perl distribution Perinci-Sub-GetArgs-Argv), released on
-    2014-10-10.
+    2014-10-11.
 
 SYNOPSIS
      use Perinci::Sub::GetArgs::Argv;
@@ -88,15 +88,15 @@ FUNCTIONS
         handler). Will be passed to "get_args_from_argv()". Example:
 
          {
-             help =E<gt> {
-                 getopt  =E<gt> 'help|h|?',
-                 handler =E<gt> sub { ... },
-                 summary =E<gt> 'Display help and exit',
+             help => {
+                 getopt  => 'help|h|?',
+                 handler => sub { ... },
+                 summary => 'Display help and exit',
              },
-             version =E<gt> {
-                 getopt  =E<gt> 'version|v',
-                 handler =E<gt> sub { ... },
-                 summary =E<gt> 'Display version and exit',
+             version => {
+                 getopt  => 'version|v',
+                 handler => sub { ... },
+                 summary => 'Display version and exit',
              },
          }
 
@@ -188,15 +188,15 @@ FUNCTIONS
         handler). Will be passed to "get_args_from_argv()". Example:
 
          {
-             help =E<gt> {
-                 getopt  =E<gt> 'help|h|?',
-                 handler =E<gt> sub { ... },
-                 summary =E<gt> 'Display help and exit',
+             help => {
+                 getopt  => 'help|h|?',
+                 handler => sub { ... },
+                 summary => 'Display help and exit',
              },
-             version =E<gt> {
-                 getopt  =E<gt> 'version|v',
-                 handler =E<gt> sub { ... },
-                 summary =E<gt> 'Display version and exit',
+             version => {
+                 getopt  => 'version|v',
+                 handler => sub { ... },
+                 summary => 'Display version and exit',
              },
          }
 
@@ -288,14 +288,15 @@ FUNCTIONS
 
     Error codes:
 
-    * 400 - Error in Getopt::Long option specification, e.g. in common_opts.
+    *   400 - Error in Getopt::Long option specification, e.g. in
+        common_opts.
 
-    * 500 - failure in GetOptions, meaning argv is not valid according to
-    metadata specification (only if 'strict' mode is enabled).
+    *   500 - failure in GetOptions, meaning argv is not valid according to
+        metadata specification (only if 'strict' mode is enabled).
 
-    * 502 - coderef in cmdline_aliases got converted into a string, probably
-    because the metadata was transported (e.g. through
-    Riap::HTTP/Riap::Simple).
+    *   502 - coderef in cmdline_aliases got converted into a string,
+        probably because the metadata was transported (e.g. through
+        Riap::HTTP/Riap::Simple).
 
 FAQ
 TODO
@@ -311,7 +312,7 @@ HOMEPAGE
 
 SOURCE
     Source repository is at
-    <https://github.com/perlancar/perl-Perinci-Sub-GetArgs-Argv>.
+    <https://github.com/sharyanto/perl-Perinci-Sub-GetArgs-Argv>.
 
 BUGS
     Please report any bugs or feature requests on the bugtracker website

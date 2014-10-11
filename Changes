@@ -1,5 +1,13 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.55    2014-10-11 (PERLANCAR)
+
+	- Support is_flag cmdline_alias property.
+
+	- [Bugfix] cmdline alias handler should also get the same treatment
+	  as arg handler.
+
+
 0.54    2014-10-10 (PERLANCAR)
 
 	- Add support for element_meta (Rinci 1.1.56).
