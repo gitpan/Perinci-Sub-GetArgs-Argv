@@ -1,5 +1,12 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.56    2014-10-23 (PERLANCAR)
+
+	- No functional changes.
+
+	- Typo: unimplemented status is 501, not 502.
+
+
 0.55    2014-10-11 (PERLANCAR)
 
 	- Support is_flag cmdline_alias property.
@@ -200,7 +207,7 @@ Revision history for Perinci-Sub-GetArgs-Agv
 
 0.34     2014-04-16 (SHARYANTO)
 
-         - Return status 502 when encountering a cmdline_alias where its code
+         - Return status 501 when encountering a cmdline_alias where its code
            has been converted into 'CODE'. This will allow modules like
            Perinci::CmdLine or App::riap to retry sending argv to the server
            instead of parsing argv on the client side.

@@ -475,16 +475,16 @@ test_getargs(meta=>$meta, argv=>[qw/-X=foo/],
         },
     };
     test_getargs(
-        name   => 'error 502 (1)',
+        name   => 'error 501 (1)',
         meta   => $meta,
         argv   => [qw/--arg1 val/],
-        status => 502,
+        status => 501,
     );
     test_getargs(
-        name   => 'error 502 (2)',
+        name   => 'error 501 (2)',
         meta   => $meta,
         argv   => [qw/--al1 val/],
-        status => 502,
+        status => 501,
     );
     test_getargs(
         name   => 'option: ignore_converted_code',

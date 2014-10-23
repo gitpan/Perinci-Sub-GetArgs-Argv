@@ -1,7 +1,7 @@
 package Perinci::Sub::GetArgs::Argv;
 
-our $DATE = '2014-10-11'; # DATE
-our $VERSION = '0.55'; # VERSION
+our $DATE = '2014-10-23'; # DATE
+our $VERSION = '0.56'; # VERSION
 
 use 5.010001;
 use strict;
@@ -271,7 +271,7 @@ sub _args2opts {
                             $alcode = sub {};
                         } else {
                             return [
-                                502,
+                                501,
                                 join("",
                                      "Code in cmdline_aliases for arg $fqarg ",
                                      "got converted into string, probably ",
@@ -719,7 +719,7 @@ Error codes:
 * 500 - failure in GetOptions, meaning argv is not valid according to metadata
   specification (only if 'strict' mode is enabled).
 
-* 502 - coderef in cmdline_aliases got converted into a string, probably because
+* 501 - coderef in cmdline_aliases got converted into a string, probably because
   the metadata was transported (e.g. through Riap::HTTP/Riap::Simple).
 
 _
@@ -914,7 +914,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-This document describes version 0.55 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-10-11.
+This document describes version 0.56 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-10-23.
 
 =head1 SYNOPSIS
 
@@ -1002,15 +1002,15 @@ option specification), C<handler> (Getopt::Long handler). Will be passed to
 C<get_args_from_argv()>. Example:
 
  {
-     help => {
-         getopt  => 'help|h|?',
-         handler => sub { ... },
-         summary => 'Display help and exit',
+     help =E<gt> {
+         getopt  =E<gt> 'help|h|?',
+         handler =E<gt> sub { ... },
+         summary =E<gt> 'Display help and exit',
      },
-     version => {
-         getopt  => 'version|v',
-         handler => sub { ... },
-         summary => 'Display version and exit',
+     version =E<gt> {
+         getopt  =E<gt> 'version|v',
+         handler =E<gt> sub { ... },
+         summary =E<gt> 'Display version and exit',
      },
  }
 
@@ -1105,15 +1105,15 @@ option specification), C<handler> (Getopt::Long handler). Will be passed to
 C<get_args_from_argv()>. Example:
 
  {
-     help => {
-         getopt  => 'help|h|?',
-         handler => sub { ... },
-         summary => 'Display help and exit',
+     help =E<gt> {
+         getopt  =E<gt> 'help|h|?',
+         handler =E<gt> sub { ... },
+         summary =E<gt> 'Display help and exit',
      },
-     version => {
-         getopt  => 'version|v',
-         handler => sub { ... },
-         summary => 'Display version and exit',
+     version =E<gt> {
+         getopt  =E<gt> 'version|v',
+         handler =E<gt> sub { ... },
+         summary =E<gt> 'Display version and exit',
      },
  }
 
@@ -1200,17 +1200,13 @@ that contains extra information.
 
 Error codes:
 
-=over
+* 400 - Error in Getopt::Long option specification, e.g. in common_opts.
 
-=item * 400 - Error in Getopt::Long option specification, e.g. in common_opts.
+* 500 - failure in GetOptions, meaning argv is not valid according to metadata
+  specification (only if 'strict' mode is enabled).
 
-=item * 500 - failure in GetOptions, meaning argv is not valid according to metadata
-specification (only if 'strict' mode is enabled).
-
-=item * 502 - coderef in cmdline_aliases got converted into a string, probably because
-the metadata was transported (e.g. through Riap::HTTP/Riap::Simple).
-
-=back
+* 501 - coderef in cmdline_aliases got converted into a string, probably because
+  the metadata was transported (e.g. through Riap::HTTP/Riap::Simple).
 
 =head1 FAQ
 
@@ -1229,7 +1225,7 @@ Please visit the project's homepage at L<https://metacpan.org/release/Perinci-Su
 
 =head1 SOURCE
 
-Source repository is at L<https://github.com/sharyanto/perl-Perinci-Sub-GetArgs-Argv>.
+Source repository is at L<https://github.com/perlancar/perl-Perinci-Sub-GetArgs-Argv>.
 
 =head1 BUGS
 
