@@ -1,5 +1,13 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.57    2014-10-24 (PERLANCAR)
+
+	- Add --ARG-base64 for buf arguments.
+
+	- [ux] Change negated options for with-foo -> without-foo (and vice
+	  versa) instead of the default nowith-foo + no-with-foo.
+
+
 0.56    2014-10-23 (PERLANCAR)
 
 	- No functional changes.

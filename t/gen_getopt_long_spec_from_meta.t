@@ -22,13 +22,15 @@ my $meta = {
         help       => {schema=>['bool', is=>1]},
         hash1      => {schema=>'hash', meta=>{v=>1.1, args=>{a=>{schema=>'str'}}}},
         ary1       => {schema=>'array', element_meta=>{v=>1.1, args=>{a=>{schema=>'str'}}}},
+        with_foo   => {schema=>'bool'}, # demo negation form with-foo -> without-foo
+        buf1       => {schema=>'buf'},
     },
 };
 
 # TODO: test per_arg_json=0
 # TODO: test per_arg_yaml=0
 # TODO: test conflicts
-
+# TODO: --nonsimple has --nonsimple-json and --nonsimple-yaml
 my $res = gen_getopt_long_spec_from_meta(
     meta=>$meta,
     per_arg_json=>1,
@@ -71,6 +73,7 @@ my $expected_res = [
         'verbose!' => 'CODE',
         'format=s' => 'CODE',
         'format-options=s' => 'CODE',
+
         'str-arg1=s' => 'CODE',
         'ary-arg1=s@' => 'CODE',
         'ary-arg1-json=s' => 'CODE',
@@ -78,7 +81,9 @@ my $expected_res = [
         'f=f' => 'CODE',
         'float1=f' => 'CODE',
         'int1=i' => 'CODE',
-        'bool1!' => 'CODE',
+        'bool1' => 'CODE',
+        'nobool1' => 'CODE',
+        'no-bool1' => 'CODE',
         'set-zero' => 'CODE', # XXX should be 'set-zero'
         'help-arg' => 'CODE',
         'hash1=s' => 'CODE',
@@ -89,6 +94,10 @@ my $expected_res = [
         'ary1-json=s' => 'CODE',
         'ary1-yaml=s' => 'CODE',
         'ary1-a=s' => 'CODE',
+        'with-foo' => 'CODE',
+        'without-foo' => 'CODE',
+        'buf1=s' => 'CODE',
+        'buf1-base64=s' => 'CODE',
     },
     {
         'func.specmeta' => {
@@ -105,7 +114,9 @@ my $expected_res = [
             'f=f' => {is_alias=>1, alias=>'f', alias_for=>'float1=f', is_code=>0, arg=>'float1', fqarg=>'float1', parsed=>'PARSED',},
             'int1=i' => {arg=>'int1', fqarg=>'int1', parsed=>'PARSED', code_aliases=>['set-zero'],},
             'set-zero' => {is_alias=>1, alias=>'set_zero', alias_for=>'int1=i', is_code=>1, arg=>'int1', fqarg=>'int1', parsed=>'PARSED',},
-            'bool1!' => {arg=>'bool1', fqarg=>'bool1', parsed=>'PARSED',},
+            'bool1' => {arg=>'bool1', fqarg=>'bool1', parsed=>'PARSED', is_neg=>0},
+            'nobool1' => {arg=>'bool1', fqarg=>'bool1', parsed=>'PARSED', is_neg=>1},
+            'no-bool1' => {arg=>'bool1', fqarg=>'bool1', parsed=>'PARSED', is_neg=>1},
             'help-arg' => {arg=>'help', fqarg=>'help', parsed=>'PARSED',},
             'hash1=s' => {arg=>'hash1', fqarg=>'hash1', parsed=>'PARSED',},
             'hash1-json=s' => {arg=>'hash1', fqarg=>'hash1', is_json=>1, parsed=>'PARSED',},
@@ -115,6 +126,10 @@ my $expected_res = [
             'ary1-json=s' => {arg=>'ary1', fqarg=>'ary1', is_json=>1, parsed=>'PARSED',},
             'ary1-yaml=s' => {arg=>'ary1', fqarg=>'ary1', is_yaml=>1, parsed=>'PARSED',},
             'ary1-a=s' => {arg=>'a', fqarg=>'ary1::a', parsed=>'PARSED',},
+            'with-foo' => {arg=>'with_foo', fqarg=>'with_foo', parsed=>'PARSED', is_neg=>0},
+            'without-foo' => {arg=>'with_foo', fqarg=>'with_foo', parsed=>'PARSED', is_neg=>1},
+            'buf1=s' => {arg=>'buf1', fqarg=>'buf1', parsed=>'PARSED'},
+            'buf1-base64=s' => {arg=>'buf1', fqarg=>'buf1', parsed=>'PARSED', is_base64=>1},
         },
         'func.opts' => [
             '--ary-arg1',
@@ -125,6 +140,8 @@ my $expected_res = [
             '--ary1-json',
             '--ary1-yaml',
             '--bool1',
+            '--buf1',
+            '--buf1-base64',
             '--float1',
             '--format',
             '--format-options',
@@ -143,6 +160,8 @@ my $expected_res = [
             '--str-arg1',
             '--verbose',
             '--version',
+            '--with-foo',
+            '--without-foo',
             '-?',
             '-f',
             '-h',
@@ -169,6 +188,8 @@ my $expected_res = [
             '--ary1-json',
             '--ary1-yaml',
             '--bool1',
+            '--buf1',
+            '--buf1-base64',
             '--float1',
             '--hash1',
             '--hash1-a',
@@ -180,6 +201,8 @@ my $expected_res = [
             '--nobool1',
             '--set-zero',
             '--str-arg1',
+            '--with-foo',
+            '--without-foo',
             '-f',
         ],
         'func.opts_by_arg' => {
@@ -222,6 +245,14 @@ my $expected_res = [
             ],
             'ary1::a' => [
                 '--ary1-a',
+            ],
+            'with_foo' => [
+                '--with-foo',
+                '--without-foo',
+            ],
+            'buf1' => [
+                '--buf1',
+                '--buf1-base64',
             ],
         },
         'func.opts_by_common' => {

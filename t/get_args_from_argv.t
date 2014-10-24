@@ -598,6 +598,25 @@ subtest 'arg element submetadata' => sub {
     );
 };
 
+subtest 'base64' => sub {
+    my $meta = {
+        v => 1.1,
+        args => {
+            data => {schema => 'buf*', req=>1},
+        },
+    };
+    test_getargs(
+        meta       => $meta,
+        argv       => [qw/--data 123/],
+        args       => {data=>"123"},
+    );
+    test_getargs(
+        meta       => $meta,
+        argv       => [qw/--data-base64 AAAA/],
+        args       => {data=>"\0\0\0"},
+    );
+};
+
 DONE_TESTING:
 done_testing;
 
