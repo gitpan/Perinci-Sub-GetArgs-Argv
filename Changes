@@ -1,5 +1,11 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.58    2014-11-19 (PERLANCAR)
+
+	- Add --isnt-FOO and --arent-FOO as negation forms for --is-FOO and
+	  --are-FOO (and vice versa) (currently untested).
+
+
 0.57    2014-10-24 (PERLANCAR)
 
 	- Add --ARG-base64 for buf arguments.

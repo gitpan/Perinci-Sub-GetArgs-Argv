@@ -1,7 +1,7 @@
 package Perinci::Sub::GetArgs::Argv;
 
-our $DATE = '2014-10-24'; # DATE
-our $VERSION = '0.57'; # VERSION
+our $DATE = '2014-11-19'; # DATE
+our $VERSION = '0.58'; # VERSION
 
 use 5.010001;
 use strict;
@@ -69,11 +69,13 @@ sub _arg2opt {
 
 sub _negations_for_opt {
     my $word = shift;
-    if ($word =~ /\Awith-(.+)/) {
-        return ("without-$1");
-    } elsif ($word =~ /\Awithout-(.+)/) {
-        return ("with-$1");
-    } else {
+    if      ($word =~ /\Awith-(.+)/   ) { return ("without-$1") }
+    elsif ($word =~ /\Awithout-(.+)/) { return ("with-$1")    }
+    elsif ($word =~ /\Ais-(.+)/     ) { return ("isnt-$1")    }
+    elsif ($word =~ /\Aisnt-(.+)/   ) { return ("is-$1")      }
+    elsif ($word =~ /\Aare-(.+)/    ) { return ("arent-$1")   }
+    elsif ($word =~ /\Aarent-(.+)/  ) { return ("are-$1")     }
+    else {
         return ("no$word", "no-$word");
     }
 }
@@ -950,7 +952,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-This document describes version 0.57 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-10-24.
+This document describes version 0.58 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-11-19.
 
 =head1 SYNOPSIS
 
@@ -1038,15 +1040,15 @@ option specification), C<handler> (Getopt::Long handler). Will be passed to
 C<get_args_from_argv()>. Example:
 
  {
-     help =E<gt> {
-         getopt  =E<gt> 'help|h|?',
-         handler =E<gt> sub { ... },
-         summary =E<gt> 'Display help and exit',
+     help => {
+         getopt  => 'help|h|?',
+         handler => sub { ... },
+         summary => 'Display help and exit',
      },
-     version =E<gt> {
-         getopt  =E<gt> 'version|v',
-         handler =E<gt> sub { ... },
-         summary =E<gt> 'Display version and exit',
+     version => {
+         getopt  => 'version|v',
+         handler => sub { ... },
+         summary => 'Display version and exit',
      },
  }
 
@@ -1141,15 +1143,15 @@ option specification), C<handler> (Getopt::Long handler). Will be passed to
 C<get_args_from_argv()>. Example:
 
  {
-     help =E<gt> {
-         getopt  =E<gt> 'help|h|?',
-         handler =E<gt> sub { ... },
-         summary =E<gt> 'Display help and exit',
+     help => {
+         getopt  => 'help|h|?',
+         handler => sub { ... },
+         summary => 'Display help and exit',
      },
-     version =E<gt> {
-         getopt  =E<gt> 'version|v',
-         handler =E<gt> sub { ... },
-         summary =E<gt> 'Display version and exit',
+     version => {
+         getopt  => 'version|v',
+         handler => sub { ... },
+         summary => 'Display version and exit',
      },
  }
 

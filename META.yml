@@ -33,7 +33,7 @@ resources:
   bugtracker: https://rt.cpan.org/Public/Dist/Display.html?Name=Perinci-Sub-GetArgs-Argv
   homepage: https://metacpan.org/release/Perinci-Sub-GetArgs-Argv
   repository: git://github.com/perlancar/perl-Perinci-Sub-GetArgs-Argv.git
-version: '0.57'
+version: '0.58'
 x_Dist_Zilla:
   perl:
     version: '5.018002'
@@ -118,6 +118,10 @@ x_Dist_Zilla:
       name: '@Author::PERLANCAR/MetaConfig'
       version: '5.019'
     -
+      class: Dist::Zilla::Plugin::Rinci::InstallCompletion
+      name: '@Author::PERLANCAR/Rinci::InstallCompletion'
+      version: '0.03'
+    -
       class: Dist::Zilla::Plugin::OurDate
       name: '@Author::PERLANCAR/OurDate'
       version: '0.01'
@@ -186,6 +190,14 @@ x_Dist_Zilla:
               name: '@Author::PERLANCAR/postlude'
               version: '4.006'
             -
+              class: Pod::Weaver::Section::BashCompletion::GetoptLongComplete
+              name: '@Author::PERLANCAR/BashCompletion::GetoptLongComplete'
+              version: '0.01'
+            -
+              class: Pod::Weaver::Section::BashCompletion::PerinciCmdLine
+              name: '@Author::PERLANCAR/BashCompletion::PerinciCmdLine'
+              version: '0.03'
+            -
               class: Pod::Weaver::Section::Homepage::DefaultCPAN
               name: '@Author::PERLANCAR/Homepage::DefaultCPAN'
               version: '0.02'
@@ -226,7 +238,7 @@ x_Dist_Zilla:
     -
       class: Dist::Zilla::Plugin::Rinci::Validate
       name: '@Author::PERLANCAR/Rinci::Validate'
-      version: '0.18'
+      version: '0.19'
     -
       class: Dist::Zilla::Plugin::SetScriptShebang
       name: '@Author::PERLANCAR/SetScriptShebang'

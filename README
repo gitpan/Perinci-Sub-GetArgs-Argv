@@ -3,9 +3,9 @@ NAME
     arguments (@ARGV)
 
 VERSION
-    This document describes version 0.57 of Perinci::Sub::GetArgs::Argv
+    This document describes version 0.58 of Perinci::Sub::GetArgs::Argv
     (from Perl distribution Perinci-Sub-GetArgs-Argv), released on
-    2014-10-24.
+    2014-11-19.
 
 SYNOPSIS
      use Perinci::Sub::GetArgs::Argv;
@@ -88,15 +88,15 @@ FUNCTIONS
         handler). Will be passed to "get_args_from_argv()". Example:
 
          {
-             help =E<gt> {
-                 getopt  =E<gt> 'help|h|?',
-                 handler =E<gt> sub { ... },
-                 summary =E<gt> 'Display help and exit',
+             help => {
+                 getopt  => 'help|h|?',
+                 handler => sub { ... },
+                 summary => 'Display help and exit',
              },
-             version =E<gt> {
-                 getopt  =E<gt> 'version|v',
-                 handler =E<gt> sub { ... },
-                 summary =E<gt> 'Display version and exit',
+             version => {
+                 getopt  => 'version|v',
+                 handler => sub { ... },
+                 summary => 'Display version and exit',
              },
          }
 
@@ -188,15 +188,15 @@ FUNCTIONS
         handler). Will be passed to "get_args_from_argv()". Example:
 
          {
-             help =E<gt> {
-                 getopt  =E<gt> 'help|h|?',
-                 handler =E<gt> sub { ... },
-                 summary =E<gt> 'Display help and exit',
+             help => {
+                 getopt  => 'help|h|?',
+                 handler => sub { ... },
+                 summary => 'Display help and exit',
              },
-             version =E<gt> {
-                 getopt  =E<gt> 'version|v',
-                 handler =E<gt> sub { ... },
-                 summary =E<gt> 'Display version and exit',
+             version => {
+                 getopt  => 'version|v',
+                 handler => sub { ... },
+                 summary => 'Display version and exit',
              },
          }
 
