@@ -3,9 +3,9 @@ NAME
     arguments (@ARGV)
 
 VERSION
-    This document describes version 0.58 of Perinci::Sub::GetArgs::Argv
+    This document describes version 0.59 of Perinci::Sub::GetArgs::Argv
     (from Perl distribution Perinci-Sub-GetArgs-Argv), released on
-    2014-11-19.
+    2014-11-20.
 
 SYNOPSIS
      use Perinci::Sub::GetArgs::Argv;
@@ -114,6 +114,8 @@ FUNCTIONS
     *   meta* => *hash*
 
         Rinci function metadata.
+
+    *   meta_is_normalized => *bool*
 
     *   per_arg_json => *bool* (default: 0)
 
@@ -288,14 +290,15 @@ FUNCTIONS
 
     Error codes:
 
-    * 400 - Error in Getopt::Long option specification, e.g. in common_opts.
+    *   400 - Error in Getopt::Long option specification, e.g. in
+        common_opts.
 
-    * 500 - failure in GetOptions, meaning argv is not valid according to
-    metadata specification (only if 'strict' mode is enabled).
+    *   500 - failure in GetOptions, meaning argv is not valid according to
+        metadata specification (only if 'strict' mode is enabled).
 
-    * 501 - coderef in cmdline_aliases got converted into a string, probably
-    because the metadata was transported (e.g. through
-    Riap::HTTP/Riap::Simple).
+    *   501 - coderef in cmdline_aliases got converted into a string,
+        probably because the metadata was transported (e.g. through
+        Riap::HTTP/Riap::Simple).
 
 FAQ
 TODO
@@ -311,7 +314,7 @@ HOMEPAGE
 
 SOURCE
     Source repository is at
-    <https://github.com/perlancar/perl-Perinci-Sub-GetArgs-Argv>.
+    <https://github.com/sharyanto/perl-Perinci-Sub-GetArgs-Argv>.
 
 BUGS
     Please report any bugs or feature requests on the bugtracker website

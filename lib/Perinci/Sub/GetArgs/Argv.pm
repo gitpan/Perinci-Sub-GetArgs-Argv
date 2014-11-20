@@ -1,7 +1,7 @@
 package Perinci::Sub::GetArgs::Argv;
 
-our $DATE = '2014-11-19'; # DATE
-our $VERSION = '0.58'; # VERSION
+our $DATE = '2014-11-20'; # DATE
+our $VERSION = '0.59'; # VERSION
 
 use 5.010001;
 use strict;
@@ -76,7 +76,7 @@ sub _negations_for_opt {
     elsif ($word =~ /\Aare-(.+)/    ) { return ("arent-$1")   }
     elsif ($word =~ /\Aarent-(.+)/  ) { return ("are-$1")     }
     else {
-        return ("no$word", "no-$word");
+        return ("no-$word", "no$word");
     }
 }
 
@@ -97,9 +97,10 @@ sub _opt2ospec {
             return ($opt, {opts=>[$opt]});
         } else {
             my @res;
-            push @res, $opt, {opts=>[$opt]}, {is_neg=>0};
-            for (_negations_for_opt($opt)) {
-                push @res, $_, {opts=>[$_]}, {is_neg=>1};
+            my @negs = _negations_for_opt($opt);
+            push @res, $opt, {opts=>[$opt]}, {is_neg=>0, neg_opts=>\@negs};
+            for (@negs) {
+                push @res, $_, {opts=>[$_]}, {is_neg=>1, pos_opts=>[$opt]};
             }
             return @res;
         }
@@ -441,6 +442,9 @@ _
             schema  => 'hash*',
             req     => 1,
         },
+        meta_is_normalized => {
+            schema => 'bool*',
+        },
         args => {
             summary => 'Reference to hash which will store the result',
             schema  => 'hash*',
@@ -535,7 +539,7 @@ sub gen_getopt_long_spec_from_meta {
         my $res = parse_getopt_long_opt_spec($ospec)
             or return [400, "Can't parse common opt spec '$ospec'"];
         $go_spec{$ospec} = $handler;
-        $specmeta{$ospec} = {arg=>undef, parsed=>$res};
+        $specmeta{$ospec} = {common_opt=>$k, arg=>undef, parsed=>$res};
         for (@{ $res->{opts} }) {
             return [412, "Clash of common opt '$_'"] if $seen_opts{$_};
             $seen_opts{$_}++; $seen_common_opts{$_} = $ospec;
@@ -952,7 +956,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-This document describes version 0.58 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-11-19.
+This document describes version 0.59 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-11-20.
 
 =head1 SYNOPSIS
 
@@ -1066,6 +1070,8 @@ okay.
 =item * B<meta>* => I<hash>
 
 Rinci function metadata.
+
+=item * B<meta_is_normalized> => I<bool>
 
 =item * B<per_arg_json> => I<bool> (default: 0)
 
@@ -1238,13 +1244,17 @@ that contains extra information.
 
 Error codes:
 
-* 400 - Error in Getopt::Long option specification, e.g. in common_opts.
+=over
 
-* 500 - failure in GetOptions, meaning argv is not valid according to metadata
-  specification (only if 'strict' mode is enabled).
+=item * 400 - Error in Getopt::Long option specification, e.g. in common_opts.
 
-* 501 - coderef in cmdline_aliases got converted into a string, probably because
-  the metadata was transported (e.g. through Riap::HTTP/Riap::Simple).
+=item * 500 - failure in GetOptions, meaning argv is not valid according to metadata
+specification (only if 'strict' mode is enabled).
+
+=item * 501 - coderef in cmdline_aliases got converted into a string, probably because
+the metadata was transported (e.g. through Riap::HTTP/Riap::Simple).
+
+=back
 
 =head1 FAQ
 
@@ -1263,7 +1273,7 @@ Please visit the project's homepage at L<https://metacpan.org/release/Perinci-Su
 
 =head1 SOURCE
 
-Source repository is at L<https://github.com/perlancar/perl-Perinci-Sub-GetArgs-Argv>.
+Source repository is at L<https://github.com/sharyanto/perl-Perinci-Sub-GetArgs-Argv>.
 
 =head1 BUGS
 
