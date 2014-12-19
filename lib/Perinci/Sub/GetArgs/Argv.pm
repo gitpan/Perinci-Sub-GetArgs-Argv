@@ -1,7 +1,7 @@
 package Perinci::Sub::GetArgs::Argv;
 
-our $DATE = '2014-11-20'; # DATE
-our $VERSION = '0.59'; # VERSION
+our $DATE = '2014-12-19'; # DATE
+our $VERSION = '0.60'; # VERSION
 
 use 5.010001;
 use strict;
@@ -21,6 +21,11 @@ our @EXPORT_OK = qw(
                );
 
 our %SPEC;
+
+$SPEC{':package'} = {
+    v => 1.1,
+    summary => 'Get subroutine arguments from command line arguments (@ARGV)',
+};
 
 my $re_simple_scalar = qr/^(str|num|int|float|bool|buf)$/;
 
@@ -647,7 +652,10 @@ If set to 0, will still return parsed argv even if there are parsing errors
 (reported by Getopt::Long). If set to 1 (the default), will die upon error.
 
 Normally you would want to use strict mode, for more error checking. Setting off
-strict is used by, for example, Perinci::Sub::Complete.
+strict is used by, for example, Perinci::Sub::Complete during completion where
+the command-line might still be incomplete.
+
+Should probably be named `ignore_errors`. :-)
 
 _
         },
@@ -805,6 +813,7 @@ sub get_args_from_argv {
     # 2. then we run GetOptions to fill $rargs from command-line opts
     #$log->tracef("GetOptions spec: %s", \@go_spec);
     {
+        local $SIG{__WARN__} = sub{} if !$strict;
         my $old_go_conf = Getopt::Long::Configure(
             $strict ? "no_pass_through" : "pass_through",
             "no_ignore_case", "permute", "bundling", "no_getopt_compat");
@@ -942,7 +951,7 @@ sub get_args_from_argv {
 }
 
 1;
-#ABSTRACT: Get subroutine arguments from command line arguments (@ARGV)
+# ABSTRACT: Get subroutine arguments from command line arguments (@ARGV)
 
 __END__
 
@@ -956,7 +965,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-This document describes version 0.59 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-11-20.
+This document describes version 0.60 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-12-19.
 
 =head1 SYNOPSIS
 
@@ -970,10 +979,6 @@ This module provides C<get_args_from_argv()>, which parses command line
 arguments (C<@ARGV>) into subroutine arguments (C<%args>). This module is used
 by L<Perinci::CmdLine>. For explanation on how command-line options are
 processed, see Perinci::CmdLine's documentation.
-
-This module uses L<Log::Any> for logging framework.
-
-This module has L<Rinci> metadata.
 
 =head1 FUNCTIONS
 
@@ -1225,7 +1230,10 @@ If set to 0, will still return parsed argv even if there are parsing errors
 (reported by Getopt::Long). If set to 1 (the default), will die upon error.
 
 Normally you would want to use strict mode, for more error checking. Setting off
-strict is used by, for example, Perinci::Sub::Complete.
+strict is used by, for example, Perinci::Sub::Complete during completion where
+the command-line might still be incomplete.
+
+Should probably be named C<ignore_errors>. :-)
 
 =back
 
@@ -1273,7 +1281,7 @@ Please visit the project's homepage at L<https://metacpan.org/release/Perinci-Su
 
 =head1 SOURCE
 
-Source repository is at L<https://github.com/sharyanto/perl-Perinci-Sub-GetArgs-Argv>.
+Source repository is at L<https://github.com/perlancar/perl-Perinci-Sub-GetArgs-Argv>.
 
 =head1 BUGS
 

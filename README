@@ -3,9 +3,9 @@ NAME
     arguments (@ARGV)
 
 VERSION
-    This document describes version 0.59 of Perinci::Sub::GetArgs::Argv
+    This document describes version 0.60 of Perinci::Sub::GetArgs::Argv
     (from Perl distribution Perinci-Sub-GetArgs-Argv), released on
-    2014-11-20.
+    2014-12-19.
 
 SYNOPSIS
      use Perinci::Sub::GetArgs::Argv;
@@ -17,10 +17,6 @@ DESCRIPTION
     arguments (@ARGV) into subroutine arguments (%args). This module is used
     by Perinci::CmdLine. For explanation on how command-line options are
     processed, see Perinci::CmdLine's documentation.
-
-    This module uses Log::Any for logging framework.
-
-    This module has Rinci metadata.
 
 FUNCTIONS
   gen_getopt_long_spec_from_meta(%args) -> [status, msg, result, meta]
@@ -273,7 +269,10 @@ FUNCTIONS
         die upon error.
 
         Normally you would want to use strict mode, for more error checking.
-        Setting off strict is used by, for example, Perinci::Sub::Complete.
+        Setting off strict is used by, for example, Perinci::Sub::Complete
+        during completion where the command-line might still be incomplete.
+
+        Should probably be named "ignore_errors". :-)
 
     Return value:
 
@@ -314,7 +313,7 @@ HOMEPAGE
 
 SOURCE
     Source repository is at
-    <https://github.com/sharyanto/perl-Perinci-Sub-GetArgs-Argv>.
+    <https://github.com/perlancar/perl-Perinci-Sub-GetArgs-Argv>.
 
 BUGS
     Please report any bugs or feature requests on the bugtracker website

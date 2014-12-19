@@ -1,5 +1,11 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.60    2014-12-19 (PERLANCAR)
+
+        - Shut up warning from Getopt::Long (by locally installing a
+          $SIG{__WARN__} handler) when strict=0.
+
+
 0.59    2014-11-20 (PERLANCAR)
 
 	- Add common_opts/neg_opts/pos_opts in func.specmeta, to help
