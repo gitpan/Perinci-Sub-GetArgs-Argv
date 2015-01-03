@@ -1,7 +1,7 @@
 package Perinci::Sub::GetArgs::Argv;
 
-our $DATE = '2014-12-19'; # DATE
-our $VERSION = '0.60'; # VERSION
+our $DATE = '2015-01-03'; # DATE
+our $VERSION = '0.61'; # VERSION
 
 use 5.010001;
 use strict;
@@ -965,7 +965,7 @@ Perinci::Sub::GetArgs::Argv - Get subroutine arguments from command line argumen
 
 =head1 VERSION
 
-This document describes version 0.60 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2014-12-19.
+This document describes version 0.61 of Perinci::Sub::GetArgs::Argv (from Perl distribution Perinci-Sub-GetArgs-Argv), released on 2015-01-03.
 
 =head1 SYNOPSIS
 
@@ -1094,8 +1094,6 @@ arguments, if arguments' schema is not simple scalar.
 
 =back
 
-Return value:
-
 Returns an enveloped result (an array).
 
 First element (status) is an integer containing HTTP status code
@@ -1105,8 +1103,7 @@ First element (status) is an integer containing HTTP status code
 element (meta) is called result metadata and is optional, a hash
 that contains extra information.
 
- (any)
-
+Return value:  (any)
 
 =head2 get_args_from_argv(%args) -> [status, msg, result, meta]
 
@@ -1141,7 +1138,7 @@ This option will be passed to Perinci::Sub::GetArgs::Array's allow_extra_elems.
 
 Specify input args, with some arguments preset.
 
-=item * B<argv> => I<array>
+=item * B<argv> => I<array[str]>
 
 If not specified, defaults to @ARGV
 
@@ -1237,8 +1234,6 @@ Should probably be named C<ignore_errors>. :-)
 
 =back
 
-Return value:
-
 Returns an enveloped result (an array).
 
 First element (status) is an integer containing HTTP status code
@@ -1248,7 +1243,7 @@ First element (status) is an integer containing HTTP status code
 element (meta) is called result metadata and is optional, a hash
 that contains extra information.
 
- (any)
+Return value:  (any)
 
 Error codes:
 
@@ -1266,11 +1261,6 @@ the metadata was transported (e.g. through Riap::HTTP/Riap::Simple).
 
 =head1 FAQ
 
-=head1 TODO
-
-Option to enable json/yaml for nullable simple scalar (to enable C<--str-json
-'~'>).
-
 =head1 SEE ALSO
 
 L<Perinci>
@@ -1281,7 +1271,7 @@ Please visit the project's homepage at L<https://metacpan.org/release/Perinci-Su
 
 =head1 SOURCE
 
-Source repository is at L<https://github.com/perlancar/perl-Perinci-Sub-GetArgs-Argv>.
+Source repository is at L<https://github.com/sharyanto/perl-Perinci-Sub-GetArgs-Argv>.
 
 =head1 BUGS
 
@@ -1297,7 +1287,7 @@ perlancar <perlancar@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2014 by perlancar@cpan.org.
+This software is copyright (c) 2015 by perlancar@cpan.org.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

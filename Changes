@@ -1,5 +1,12 @@
 Revision history for Perinci-Sub-GetArgs-Agv
 
+0.61    2015-01-03 (PERLANCAR)
+
+	- No functional changes.
+
+	- Rebuild (Generate TODO.md).
+
+
 0.60    2014-12-19 (PERLANCAR)
 
         - Shut up warning from Getopt::Long (by locally installing a
